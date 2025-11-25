@@ -15,6 +15,7 @@ import { AppPagination } from "@/components/molecules/pagination";
 import { ProductsTable } from "@/components/molecules/product-table";
 import { mockProducts } from "@/data/product";
 import { useState } from "react";
+import { CreateProductDialog } from "@/components/molecules/product-create-dialog";
 
 export default function Products() {
   const [page, setPage] = useState(1);
@@ -57,10 +58,11 @@ export default function Products() {
           </Select>
         </div>
         <div>
-          <Button className="ml-2">
+          {/* <Button className="ml-2">
             <Plus />
             New
-          </Button>
+          </Button> */}
+          <CreateProductDialog />
         </div>
       </div>
       {/* Product Table */}
