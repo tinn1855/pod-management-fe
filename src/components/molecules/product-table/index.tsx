@@ -16,8 +16,6 @@ import { Product } from "@/type/product";
 export function ProductsTable({ products }: { products: Product[] }) {
   return (
     <Table>
-      <TableCaption>Danh sách sản phẩm.</TableCaption>
-
       <TableHeader>
         <TableRow>
           <TableHead>ID</TableHead>
@@ -63,7 +61,7 @@ export function ProductsTable({ products }: { products: Product[] }) {
             <TableCell>{product.variantCount} variants</TableCell>
             <TableCell>{product.sizes.length} sizes</TableCell>
             <TableCell>{product.colors.length} colors</TableCell>
-            <TableCell>{product.price}</TableCell>
+            <TableCell>${product.price}</TableCell>
             <TableCell>
               <Badge
                 variant={

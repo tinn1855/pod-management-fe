@@ -9,10 +9,9 @@ import {
   PaginationNext,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 export function AppPagination({ totalPages }: { totalPages: number }) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -20,8 +19,13 @@ export function AppPagination({ totalPages }: { totalPages: number }) {
 
   const createQuery = (value: number) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("page", value.toString());
-    return `${pathname}?${params.toString()}`;
+    if (value === 1) {
+      params.delete("page");
+    } else {
+      params.set("page", value.toString());
+    }
+    const query = params.toString();
+    return query ? `${pathname}?${query}` : pathname;
   };
 
   const generatePages = () => {
@@ -54,7 +58,10 @@ export function AppPagination({ totalPages }: { totalPages: number }) {
       <PaginationContent>
         {/* Prev */}
         <PaginationItem>
-          <PaginationPrevious href={createQuery(Math.max(page - 1, 1))} />
+          <PaginationPrevious
+            href={createQuery(Math.max(page - 1, 1))}
+            aria-disabled={page === 1}
+          />
         </PaginationItem>
 
         {/* Numbers */}
@@ -77,7 +84,10 @@ export function AppPagination({ totalPages }: { totalPages: number }) {
 
         {/* Next */}
         <PaginationItem>
-          <PaginationNext href={createQuery(Math.min(page + 1, totalPages))} />
+          <PaginationNext
+            href={createQuery(Math.min(page + 1, totalPages))}
+            aria-disabled={page === totalPages}
+          />
         </PaginationItem>
       </PaginationContent>
     </Pagination>
