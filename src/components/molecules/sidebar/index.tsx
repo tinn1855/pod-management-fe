@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Box,
   ChevronUp,
@@ -5,6 +7,7 @@ import {
   History,
   Home,
   Lightbulb,
+  LogOut,
   Package,
   PackageSearch,
   PenTool,
@@ -29,6 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/auth.context";
 
 // Menu items.
 const items = [
@@ -80,6 +84,8 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const { logout } = useAuth();
+
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
@@ -118,11 +124,14 @@ export function AppSidebar() {
                 <DropdownMenuItem>
                   <span>Billing</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>Sign out</span>
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={logout}>
+              <LogOut />
+              <span>Log out</span>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
