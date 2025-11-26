@@ -1,19 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/molecules/sidebar";
 import { Toaster } from "sonner";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { AuthProvider } from "@/contexts/auth.context";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -27,19 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="mdl-js">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
-      >
-        <div className="flex min-h-screen">
-          <SidebarProvider>
-            <AppSidebar />
-            <main className="w-full p-5">
-              <SidebarTrigger />
-              {children}
-            </main>
-          </SidebarProvider>
-        </div>
-        <Toaster position="top-right" richColors />
+      <body className="antialiased bg-gray-50">
+        <AuthProvider>
+          {children}
+          <Toaster position="top-right" richColors />
+        </AuthProvider>
       </body>
     </html>
   );
