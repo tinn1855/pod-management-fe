@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useProductForm } from "@/hooks/use-product-form";
 import { useThumbnailUploader } from "@/hooks/use-thumbnail-uploader";
@@ -34,11 +35,20 @@ export function CreateProductDialog() {
     setOpen(false);
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      form.reset();
+      reset();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
-          <span>+</span> New Product
+          <Plus className="mr-2 h-4 w-4" />
+          New Product
         </Button>
       </DialogTrigger>
 
