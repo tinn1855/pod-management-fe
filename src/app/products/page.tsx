@@ -14,19 +14,31 @@ import { Plus } from "lucide-react";
 import { AppPagination } from "@/components/molecules/pagination";
 import { ProductsTable } from "@/components/molecules/product-table";
 import { mockProducts } from "@/data/product";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { CreateProductDialog } from "@/components/molecules/product-create-dialog";
+import { Product } from "@/type/product";
 
 export default function Products() {
+  const [products, setProducts] = useState<Product[]>(mockProducts);
   const [page, setPage] = useState(1);
 
   const itemsPerPage = 10;
-  const totalPages = Math.ceil(mockProducts.length / itemsPerPage);
+  const totalPages = Math.ceil(products.length / itemsPerPage);
 
-  const paginatedProducts = mockProducts.slice(
+  const paginatedProducts = products.slice(
     (page - 1) * itemsPerPage,
     page * itemsPerPage
   );
+
+  const handleEdit = (updatedProduct: Product) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+    );
+  };
+
+  const handleDelete = (product: Product) => {
+    setProducts((prev) => prev.filter((p) => p.id !== product.id));
+  };
 
   return (
     <section className="space-y-6">
@@ -66,8 +78,14 @@ export default function Products() {
         </div>
       </div>
       {/* Product Table */}
-      <ProductsTable products={paginatedProducts} />
-      <AppPagination totalPages={totalPages} />
+      <ProductsTable
+        products={paginatedProducts}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <AppPagination totalPages={totalPages} />
+      </Suspense>
     </section>
   );
 }

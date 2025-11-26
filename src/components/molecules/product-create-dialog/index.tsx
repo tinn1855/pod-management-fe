@@ -19,7 +19,7 @@ export function CreateProductDialog() {
   const form = useProductForm();
   const { thumbnail, upload, reset } = useThumbnailUploader();
 
-  const handleSubmit = (data) => {
+  const handleSubmit = () => {
     if (!thumbnail) return toast.error("Please upload a thumbnail.");
 
     toast.success("Product created!");

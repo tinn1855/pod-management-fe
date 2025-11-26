@@ -1,13 +1,13 @@
-import { CreateProductInput } from "@/schema/product.schema";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, FieldValues } from "react-hook-form";
 
-export interface ProductFormProps {
-  form: UseFormReturn<CreateProductInput>;
+export interface ProductFormProps<T extends FieldValues = FieldValues> {
+  form: UseFormReturn<T>;
   thumbnail: string | null;
   onThumbnailUpload: (file?: File) => void;
   onThumbnailClear: () => void;
-  onSubmit: (data: CreateProductInput) => void;
+  onSubmit: (data: T) => void;
   onCancel: () => void;
+  mode?: "create" | "edit";
 }
 
 export interface ProductThumbnailUploaderProps {
