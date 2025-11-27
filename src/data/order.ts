@@ -1,316 +1,381 @@
-import { Order, OrderStatus, OrderSource } from "@/type/order";
+import { Order, OrderStatus } from "@/type/order";
+import { PlatformType } from "@/type/platform";
 import { mockUsers } from "./user";
+import { mockStores, getPlatformLabel, getPlatformColor } from "./platform";
 
-// Mock Orders data
-export const mockOrders: Order[] = [
+// ============================================
+// ORDER DATA GENERATORS
+// ============================================
+
+const orderStatuses: OrderStatus[] = [
+  "pending",
+  "processing",
+  "designing",
+  "production",
+  "shipped",
+  "delivered",
+  "cancelled",
+];
+
+const customerFirstNames = [
+  "John",
+  "Sarah",
+  "Michael",
+  "Emily",
+  "David",
+  "Jessica",
+  "Chris",
+  "Amanda",
+  "James",
+  "Jennifer",
+  "Robert",
+  "Lisa",
+  "William",
+  "Ashley",
+  "Daniel",
+  "Nicole",
+  "Nguyễn",
+  "Trần",
+  "Lê",
+  "Phạm",
+  "Hoàng",
+  "Huỳnh",
+  "Phan",
+  "Vũ",
+];
+
+const customerLastNames = [
+  "Smith",
+  "Johnson",
+  "Williams",
+  "Brown",
+  "Jones",
+  "Miller",
+  "Davis",
+  "Wilson",
+  "Anderson",
+  "Taylor",
+  "Thomas",
+  "Jackson",
+  "White",
+  "Harris",
+  "Martin",
+  "Garcia",
+  "Văn A",
+  "Thị B",
+  "Minh C",
+  "Đức D",
+  "Hữu E",
+  "Quốc F",
+  "Thanh G",
+  "Kim H",
+];
+
+const cities = [
+  { city: "New York", state: "NY", country: "United States", zip: "10001" },
+  { city: "Los Angeles", state: "CA", country: "United States", zip: "90001" },
+  { city: "Chicago", state: "IL", country: "United States", zip: "60601" },
+  { city: "Houston", state: "TX", country: "United States", zip: "77001" },
+  { city: "Seattle", state: "WA", country: "United States", zip: "98101" },
   {
-    id: "order-1",
-    orderNumber: "ORD-2024-001",
-    source: "etsy",
-    externalOrderId: "ETSY-123456789",
-    status: "pending",
-    customer: {
-      name: "John Smith",
-      email: "john.smith@email.com",
-      phone: "+1 234 567 890",
-      address: "123 Main Street",
-      city: "New York",
-      state: "NY",
-      country: "United States",
-      zipCode: "10001",
-    },
-    items: [
-      {
-        id: "item-1",
-        productName: "Custom T-Shirt - Summer Vibes",
-        sku: "TSHIRT-SUM-001",
-        quantity: 2,
-        price: 25.99,
-        variant: "Size M, Black",
-      },
-    ],
-    subtotal: 51.98,
-    shippingCost: 5.99,
-    tax: 4.68,
-    total: 62.65,
-    currency: "USD",
-    notes: "Please handle with care",
-    assignedTo: mockUsers[1], // Seller
-    createdAt: "2024-01-20T10:30:00Z",
-    updatedAt: "2024-01-20T10:30:00Z",
+    city: "San Francisco",
+    state: "CA",
+    country: "United States",
+    zip: "94102",
+  },
+  { city: "Miami", state: "FL", country: "United States", zip: "33101" },
+  { city: "Boston", state: "MA", country: "United States", zip: "02101" },
+  { city: "Denver", state: "CO", country: "United States", zip: "80201" },
+  { city: "Portland", state: "OR", country: "United States", zip: "97201" },
+  { city: "Hồ Chí Minh", state: "", country: "Vietnam", zip: "700000" },
+  { city: "Hà Nội", state: "", country: "Vietnam", zip: "100000" },
+  { city: "Đà Nẵng", state: "", country: "Vietnam", zip: "550000" },
+  { city: "London", state: "", country: "United Kingdom", zip: "SW1A 1AA" },
+  { city: "Sydney", state: "NSW", country: "Australia", zip: "2000" },
+];
+
+const productItems = [
+  {
+    name: "Custom T-Shirt - Summer Vibes",
+    sku: "TSHIRT-SUM",
+    price: 25.99,
+    variants: ["Size S, Black", "Size M, White", "Size L, Navy"],
   },
   {
-    id: "order-2",
-    orderNumber: "ORD-2024-002",
-    source: "amazon",
-    externalOrderId: "AMZ-987654321",
-    status: "processing",
-    customer: {
-      name: "Sarah Johnson",
-      email: "sarah.j@email.com",
-      address: "456 Oak Avenue",
-      city: "Los Angeles",
-      state: "CA",
-      country: "United States",
-      zipCode: "90001",
-    },
-    items: [
-      {
-        id: "item-2",
-        productName: "Custom Mug - Coffee Lover",
-        sku: "MUG-COF-001",
-        quantity: 1,
-        price: 15.99,
-      },
-      {
-        id: "item-3",
-        productName: "Sticker Pack - Cute Animals",
-        sku: "STICKER-ANI-001",
-        quantity: 3,
-        price: 8.99,
-      },
-    ],
-    subtotal: 42.96,
-    shippingCost: 4.99,
-    tax: 3.87,
-    total: 51.82,
-    currency: "USD",
-    assignedTo: mockUsers[1],
-    createdAt: "2024-01-19T14:20:00Z",
-    updatedAt: "2024-01-20T09:15:00Z",
+    name: "Premium Hoodie - Street Art",
+    sku: "HOODIE-ART",
+    price: 45.99,
+    variants: ["Size M, Gray", "Size L, Black", "Size XL, White"],
   },
   {
-    id: "order-3",
-    orderNumber: "ORD-2024-003",
-    source: "manual",
-    status: "designing",
-    customer: {
-      name: "Nguyễn Văn A",
-      email: "nguyenvana@email.com",
-      phone: "+84 123 456 789",
-      address: "123 Nguyễn Huệ",
-      city: "Hồ Chí Minh",
-      country: "Vietnam",
-      zipCode: "700000",
-    },
-    items: [
-      {
-        id: "item-4",
-        productName: "Custom Hoodie - Street Style",
-        sku: "HOODIE-STR-001",
-        quantity: 1,
-        price: 45.00,
-        variant: "Size L, White",
-        designId: "design-3",
-      },
-    ],
-    subtotal: 45.00,
-    shippingCost: 10.00,
-    tax: 0,
-    total: 55.00,
-    currency: "USD",
-    notes: "Khách yêu cầu thiết kế riêng",
-    designFiles: ["/uploads/custom-hoodie-ref.jpg"],
-    assignedTo: mockUsers[2],
-    createdAt: "2024-01-18T08:00:00Z",
-    updatedAt: "2024-01-20T11:30:00Z",
+    name: "Coffee Lover Mug",
+    sku: "MUG-COF",
+    price: 15.99,
+    variants: ["11oz", "15oz"],
   },
   {
-    id: "order-4",
-    orderNumber: "ORD-2024-004",
-    source: "etsy",
-    externalOrderId: "ETSY-111222333",
-    status: "production",
-    customer: {
-      name: "Emily Brown",
-      email: "emily.b@email.com",
-      address: "789 Pine Street",
-      city: "Chicago",
-      state: "IL",
-      country: "United States",
-      zipCode: "60601",
-    },
-    items: [
-      {
-        id: "item-5",
-        productName: "Canvas Print - Abstract Art",
-        sku: "CANVAS-ABS-001",
-        quantity: 1,
-        price: 79.99,
-        variant: "24x36 inches",
-      },
-    ],
-    subtotal: 79.99,
-    shippingCost: 12.99,
-    tax: 7.44,
-    total: 100.42,
-    currency: "USD",
-    assignedTo: mockUsers[1],
-    createdAt: "2024-01-17T16:45:00Z",
-    updatedAt: "2024-01-19T10:00:00Z",
+    name: "Canvas Print - Abstract",
+    sku: "CANVAS-ABS",
+    price: 79.99,
+    variants: ["16x20", "24x36", "30x40"],
   },
   {
-    id: "order-5",
-    orderNumber: "ORD-2024-005",
-    source: "amazon",
-    externalOrderId: "AMZ-444555666",
-    status: "shipped",
-    customer: {
-      name: "Michael Lee",
-      email: "m.lee@email.com",
-      address: "321 Elm Road",
-      city: "Houston",
-      state: "TX",
-      country: "United States",
-      zipCode: "77001",
-    },
-    items: [
-      {
-        id: "item-6",
-        productName: "Tote Bag - Eco Friendly",
-        sku: "TOTE-ECO-001",
-        quantity: 2,
-        price: 22.99,
-      },
-    ],
-    subtotal: 45.98,
-    shippingCost: 6.99,
-    tax: 4.24,
-    total: 57.21,
-    currency: "USD",
-    trackingNumber: "1Z999AA10123456784",
-    assignedTo: mockUsers[1],
-    createdAt: "2024-01-15T09:30:00Z",
-    updatedAt: "2024-01-18T14:20:00Z",
-    shippedAt: "2024-01-18T14:20:00Z",
+    name: "Eco Tote Bag",
+    sku: "TOTE-ECO",
+    price: 22.99,
+    variants: ["Natural", "Black"],
   },
   {
-    id: "order-6",
-    orderNumber: "ORD-2024-006",
-    source: "etsy",
-    externalOrderId: "ETSY-777888999",
-    status: "delivered",
-    customer: {
-      name: "Jessica Wilson",
-      email: "jessica.w@email.com",
-      address: "654 Maple Lane",
-      city: "Seattle",
-      state: "WA",
-      country: "United States",
-      zipCode: "98101",
-    },
-    items: [
-      {
-        id: "item-7",
-        productName: "Poster - Motivational Quotes",
-        sku: "POSTER-MOT-001",
-        quantity: 3,
-        price: 18.99,
-        variant: "18x24 inches",
-      },
-    ],
-    subtotal: 56.97,
-    shippingCost: 8.99,
-    tax: 5.94,
-    total: 71.90,
-    currency: "USD",
-    trackingNumber: "1Z999AA10123456785",
-    assignedTo: mockUsers[2],
-    createdAt: "2024-01-10T11:15:00Z",
-    updatedAt: "2024-01-16T16:30:00Z",
-    shippedAt: "2024-01-13T09:00:00Z",
-    deliveredAt: "2024-01-16T16:30:00Z",
+    name: "Sticker Pack - Kawaii",
+    sku: "STICKER-KAW",
+    price: 8.99,
+    variants: ["Pack of 10", "Pack of 25"],
   },
   {
-    id: "order-7",
-    orderNumber: "ORD-2024-007",
-    source: "manual",
-    status: "cancelled",
-    customer: {
-      name: "David Chen",
-      email: "d.chen@email.com",
-      address: "987 Cedar Drive",
-      city: "San Francisco",
-      state: "CA",
-      country: "United States",
-      zipCode: "94102",
-    },
-    items: [
-      {
-        id: "item-8",
-        productName: "Custom Phone Case",
-        sku: "PHONE-CUS-001",
-        quantity: 1,
-        price: 29.99,
-      },
-    ],
-    subtotal: 29.99,
-    shippingCost: 4.99,
-    tax: 2.84,
-    total: 37.82,
-    currency: "USD",
-    notes: "Khách hủy do đổi ý",
-    createdAt: "2024-01-12T13:00:00Z",
-    updatedAt: "2024-01-13T10:00:00Z",
+    name: "Phone Case - Minimal",
+    sku: "PHONE-MIN",
+    price: 29.99,
+    variants: ["iPhone 14", "iPhone 15", "Samsung S23"],
+  },
+  {
+    name: "Poster - Motivational",
+    sku: "POSTER-MOT",
+    price: 18.99,
+    variants: ["12x18", "18x24", "24x36"],
+  },
+  {
+    name: "Snapback Cap",
+    sku: "CAP-SNAP",
+    price: 24.99,
+    variants: ["Black", "Navy", "Red"],
+  },
+  {
+    name: "Jogger Pants",
+    sku: "PANTS-JOG",
+    price: 39.99,
+    variants: ["Size S", "Size M", "Size L", "Size XL"],
+  },
+  {
+    name: "Vintage Graphic Tee",
+    sku: "TEE-VINT",
+    price: 28.99,
+    variants: ["Size M, Washed Black", "Size L, Washed Gray"],
+  },
+  {
+    name: "Denim Jacket - Classic",
+    sku: "JACKET-DEN",
+    price: 69.99,
+    variants: ["Size M", "Size L", "Size XL"],
+  },
+  {
+    name: "Running Shoes",
+    sku: "SHOES-RUN",
+    price: 89.99,
+    variants: ["Size 40", "Size 42", "Size 44"],
+  },
+  {
+    name: "Leather Belt",
+    sku: "BELT-LEA",
+    price: 34.99,
+    variants: ["Brown", "Black"],
+  },
+  {
+    name: "Wool Scarf",
+    sku: "SCARF-WOL",
+    price: 29.99,
+    variants: ["Gray", "Navy", "Burgundy"],
   },
 ];
 
-// Helper functions
+function generateRandomDate(start: Date, end: Date): Date {
+  return new Date(
+    start.getTime() + Math.random() * (end.getTime() - start.getTime())
+  );
+}
+
+function formatDate(date: Date): string {
+  return date.toISOString();
+}
+
+// Get seller users for assignment
+const sellerUsers = mockUsers.filter((u) => u.role.name === "Seller");
+
+function generateOrder(index: number): Order {
+  const status = orderStatuses[index % orderStatuses.length];
+  const store = mockStores[index % mockStores.length];
+  const platform = store.account.platform.type;
+  const cityInfo = cities[index % cities.length];
+  const firstName = customerFirstNames[index % customerFirstNames.length];
+  const lastName = customerLastNames[(index + 5) % customerLastNames.length];
+
+  // Generate 1-3 items per order
+  const itemCount = (index % 3) + 1;
+  const items = Array.from({ length: itemCount }, (_, i) => {
+    const product = productItems[(index + i) % productItems.length];
+    const quantity = (i % 3) + 1;
+    return {
+      id: `item-${index}-${i}`,
+      productName: product.name,
+      sku: `${product.sku}-${String(index + 1).padStart(3, "0")}`,
+      quantity,
+      price: product.price,
+      variant: product.variants[i % product.variants.length],
+    };
+  });
+
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const shippingCost =
+    cityInfo.country === "United States"
+      ? 5.99 + (index % 5)
+      : 12.99 + (index % 8);
+  const tax = cityInfo.country === "United States" ? subtotal * 0.08 : 0;
+  const total = subtotal + shippingCost + tax;
+
+  const createdAt = generateRandomDate(
+    new Date("2024-01-01"),
+    new Date("2024-11-20")
+  );
+  const updatedAt = generateRandomDate(createdAt, new Date("2024-11-27"));
+
+  let shippedAt: string | undefined;
+  let deliveredAt: string | undefined;
+  let trackingNumber: string | undefined;
+
+  if (status === "shipped" || status === "delivered") {
+    shippedAt = formatDate(generateRandomDate(createdAt, updatedAt));
+    trackingNumber = `1Z999AA1${String(index + 1).padStart(10, "0")}`;
+  }
+  if (status === "delivered") {
+    const shippedDate = shippedAt ? new Date(shippedAt) : createdAt;
+    deliveredAt = formatDate(
+      generateRandomDate(shippedDate, new Date(updatedAt))
+    );
+  }
+
+  const order: Order = {
+    id: `order-${index + 1}`,
+    orderNumber: `ORD-2024-${String(index + 1).padStart(3, "0")}`,
+    platform,
+    store,
+    status,
+    customer: {
+      name: `${firstName} ${lastName}`,
+      email: `${firstName.toLowerCase()}.${lastName
+        .toLowerCase()
+        .replace(/\s/g, "")}@email.com`,
+      phone:
+        index % 2 === 0
+          ? `+1 ${Math.floor(Math.random() * 900 + 100)} ${Math.floor(
+              Math.random() * 900 + 100
+            )} ${Math.floor(Math.random() * 9000 + 1000)}`
+          : undefined,
+      address: `${100 + index} ${
+        ["Main St", "Oak Ave", "Pine Rd", "Elm Dr", "Cedar Ln"][index % 5]
+      }`,
+      city: cityInfo.city,
+      state: cityInfo.state || undefined,
+      country: cityInfo.country,
+      zipCode: cityInfo.zip,
+    },
+    items,
+    subtotal: Math.round(subtotal * 100) / 100,
+    shippingCost: Math.round(shippingCost * 100) / 100,
+    tax: Math.round(tax * 100) / 100,
+    total: Math.round(total * 100) / 100,
+    currency: store.currency,
+    notes:
+      index % 4 === 0
+        ? "Please handle with care"
+        : index % 7 === 0
+        ? "Gift wrapping requested"
+        : undefined,
+    assignedTo: sellerUsers[index % sellerUsers.length],
+    createdAt: formatDate(createdAt),
+    updatedAt: formatDate(updatedAt),
+    shippedAt,
+    deliveredAt,
+    trackingNumber,
+  };
+
+  // Add external order ID for platform orders
+  if (platform === "etsy") {
+    order.externalOrderId = `ETSY-${Math.floor(
+      Math.random() * 900000000 + 100000000
+    )}`;
+  } else if (platform === "amazon") {
+    order.externalOrderId = `AMZ-${Math.floor(
+      Math.random() * 900000000 + 100000000
+    )}`;
+  } else if (platform === "shopify") {
+    order.externalOrderId = `SHOP-${Math.floor(
+      Math.random() * 900000000 + 100000000
+    )}`;
+  }
+
+  // Add design files for designing status
+  if (status === "designing") {
+    order.designFiles = ["/uploads/design-ref-" + (index + 1) + ".jpg"];
+  }
+
+  return order;
+}
+
+// Generate 100 orders
+export const mockOrders: Order[] = Array.from({ length: 100 }, (_, i) =>
+  generateOrder(i)
+);
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
 export const getStatusLabel = (status: OrderStatus): string => {
   const labels: Record<OrderStatus, string> = {
-    pending: "Chờ xử lý",
-    processing: "Đang xử lý",
-    designing: "Đang thiết kế",
-    production: "Đang sản xuất",
-    shipped: "Đã gửi hàng",
-    delivered: "Đã giao hàng",
-    cancelled: "Đã hủy",
+    pending: "Pending",
+    processing: "Processing",
+    designing: "Designing",
+    production: "Production",
+    shipped: "Shipped",
+    delivered: "Delivered",
+    cancelled: "Cancelled",
   };
   return labels[status];
 };
 
 export const getStatusColor = (status: OrderStatus): string => {
   const colors: Record<OrderStatus, string> = {
-    pending: "#f59e0b",     // amber
-    processing: "#3b82f6",  // blue
-    designing: "#8b5cf6",   // violet
-    production: "#06b6d4",  // cyan
-    shipped: "#10b981",     // emerald
-    delivered: "#22c55e",   // green
-    cancelled: "#ef4444",   // red
+    pending: "#f59e0b", // amber
+    processing: "#3b82f6", // blue
+    designing: "#8b5cf6", // violet
+    production: "#06b6d4", // cyan
+    shipped: "#10b981", // emerald
+    delivered: "#22c55e", // green
+    cancelled: "#ef4444", // red
   };
   return colors[status];
 };
 
-export const getSourceLabel = (source: OrderSource): string => {
-  const labels: Record<OrderSource, string> = {
-    etsy: "Etsy",
-    amazon: "Amazon",
-    manual: "Thủ công",
-    shopify: "Shopify",
-    other: "Khác",
-  };
-  return labels[source];
-};
-
-export const getSourceColor = (source: OrderSource): string => {
-  const colors: Record<OrderSource, string> = {
-    etsy: "#f56400",    // etsy orange
-    amazon: "#ff9900",  // amazon orange
-    manual: "#6b7280",  // gray
-    shopify: "#96bf48", // shopify green
-    other: "#9ca3af",   // gray
-  };
-  return colors[source];
-};
+// Re-export platform helpers
+export { getPlatformLabel, getPlatformColor };
 
 // Get orders by status
 export const getOrdersByStatus = (orders: Order[], status: OrderStatus) =>
   orders.filter((order) => order.status === status);
 
-// Get orders by source
-export const getOrdersBySource = (orders: Order[], source: OrderSource) =>
-  orders.filter((order) => order.source === source);
+// Get orders by platform
+export const getOrdersByPlatform = (orders: Order[], platform: PlatformType) =>
+  orders.filter((order) => order.platform === platform);
+
+// Get orders by store
+export const getOrdersByStore = (orders: Order[], storeId: string) =>
+  orders.filter((order) => order.store?.id === storeId);
+
+// Get orders by account
+export const getOrdersByAccount = (orders: Order[], accountId: string) =>
+  orders.filter((order) => order.store?.account.id === accountId);
 
 // Calculate order stats
 export const getOrderStats = (orders: Order[]) => {
@@ -328,4 +393,3 @@ export const getOrderStats = (orders: Order[]) => {
       .reduce((sum, o) => sum + o.total, 0),
   };
 };
-

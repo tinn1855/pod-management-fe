@@ -13,12 +13,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Idea, IdeaStatus } from "@/type/idea";
+import { getIdeasByStatus, getStatusLabel } from "@/data/idea";
 import {
-  getIdeasByStatus,
-  getStatusColor,
-  getStatusLabel,
-  getPriorityColor,
-} from "@/data/idea";
+  IDEA_STATUS_BADGE_OUTLINE_VARIANTS,
+  PRIORITY_BADGE_OUTLINE_VARIANTS,
+} from "@/constants/badge-variants";
 import {
   GripVertical,
   MessageSquare,
@@ -67,14 +66,14 @@ export function IdeaKanbanBoard({
     setDraggedIdea(idea);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", idea.id);
-    
+
     const target = e.target as HTMLElement;
-    target.style.opacity = "0.5";
+    target.classList.add("opacity-50");
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
     const target = e.target as HTMLElement;
-    target.style.opacity = "1";
+    target.classList.remove("opacity-50");
     setDraggedIdea(null);
     setDragOverColumn(null);
   };
@@ -91,11 +90,11 @@ export function IdeaKanbanBoard({
 
   const handleDrop = (e: React.DragEvent, newStatus: IdeaStatus) => {
     e.preventDefault();
-    
+
     if (draggedIdea && draggedIdea.status !== newStatus) {
       onUpdateStatus(draggedIdea.id, newStatus);
     }
-    
+
     setDraggedIdea(null);
     setDragOverColumn(null);
   };
@@ -104,17 +103,19 @@ export function IdeaKanbanBoard({
     <div className="overflow-x-auto pb-4">
       <div className="flex gap-4 min-w-max">
         {columns.map((column) => (
-          <div 
-            key={column.id} 
-            className="flex-shrink-0 w-[280px]"
+          <div
+            key={column.id}
+            className="shrink-0 w-[280px]"
             onDragOver={(e) => handleDragOver(e, column.id as IdeaStatus)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, column.id as IdeaStatus)}
           >
             <div className="flex items-center gap-2 mb-3 px-1">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: column.color }}
+              <Badge
+                variant={
+                  IDEA_STATUS_BADGE_OUTLINE_VARIANTS[column.id as IdeaStatus]
+                }
+                className="w-3 h-3 p-0 rounded-full"
               />
               <h3 className="font-semibold text-sm">{column.title}</h3>
               <Badge variant="secondary" className="ml-auto text-xs">
@@ -122,12 +123,10 @@ export function IdeaKanbanBoard({
               </Badge>
             </div>
 
-            <div 
+            <div
               className={cn(
                 "space-y-3 min-h-[200px] p-2 rounded-lg transition-colors duration-200",
-                dragOverColumn === column.id 
-                  ? "bg-muted/50" 
-                  : "bg-muted/30"
+                dragOverColumn === column.id ? "bg-muted/50" : "bg-muted/30"
               )}
             >
               {column.ideas.map((idea) => (
@@ -143,13 +142,17 @@ export function IdeaKanbanBoard({
                 >
                   <CardHeader className="p-3 pb-2">
                     <div className="flex items-start gap-2">
-                      <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                      <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                       <CardTitle className="text-sm font-medium line-clamp-2 flex-1 min-h-[40px]">
                         {idea.title}
                       </CardTitle>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0"
+                          >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -164,9 +167,11 @@ export function IdeaKanbanBoard({
                                 key={status}
                                 onClick={() => onUpdateStatus(idea.id, status)}
                               >
-                                <div
-                                  className="w-2 h-2 rounded-full mr-2"
-                                  style={{ backgroundColor: getStatusColor(status) }}
+                                <Badge
+                                  variant={
+                                    IDEA_STATUS_BADGE_OUTLINE_VARIANTS[status]
+                                  }
+                                  className="w-2 h-2 p-0 mr-2 rounded-full"
                                 />
                                 {getStatusLabel(status)}
                               </DropdownMenuItem>
@@ -200,7 +205,10 @@ export function IdeaKanbanBoard({
                         </Badge>
                       ))}
                       {idea.tags.length > 3 && (
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1.5 py-0"
+                        >
                           +{idea.tags.length - 3}
                         </Badge>
                       )}
@@ -211,12 +219,10 @@ export function IdeaKanbanBoard({
                       <div className="flex items-center gap-2">
                         {/* Priority */}
                         <Badge
-                          variant="secondary"
+                          variant={
+                            PRIORITY_BADGE_OUTLINE_VARIANTS[idea.priority]
+                          }
                           className="text-[10px] px-1.5 py-0"
-                          style={{
-                            backgroundColor: `${getPriorityColor(idea.priority)}20`,
-                            color: getPriorityColor(idea.priority),
-                          }}
                         >
                           {idea.priority}
                         </Badge>
@@ -225,7 +231,9 @@ export function IdeaKanbanBoard({
                         {idea.comments.length > 0 && (
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <MessageSquare className="h-3 w-3" />
-                            <span className="text-[10px]">{idea.comments.length}</span>
+                            <span className="text-[10px]">
+                              {idea.comments.length}
+                            </span>
                           </div>
                         )}
 
@@ -233,7 +241,9 @@ export function IdeaKanbanBoard({
                         {idea.references.length > 0 && (
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <Paperclip className="h-3 w-3" />
-                            <span className="text-[10px]">{idea.references.length}</span>
+                            <span className="text-[10px]">
+                              {idea.references.length}
+                            </span>
                           </div>
                         )}
                       </div>

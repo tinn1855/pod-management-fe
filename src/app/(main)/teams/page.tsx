@@ -1,35 +1,42 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus } from "lucide-react";
 import { AppPagination } from "@/components/molecules/pagination";
 import { TeamsTable } from "@/components/molecules/team-table";
 import { mockTeams, mockUsers } from "@/data/user";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { CreateTeamDialog } from "@/components/molecules/team-create-dialog";
-import { Team, User } from "@/type/user";
+import { Team } from "@/type/user";
+import { ITEMS_PER_PAGE } from "@/constants";
 
 export default function TeamsPage() {
+  const searchParams = useSearchParams();
+  const currentPage = Number(searchParams.get("page") ?? 1);
+
   const [teams, setTeams] = useState<Team[]>(mockTeams);
-  const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const itemsPerPage = 10;
+  const filteredTeams = useMemo(() => {
+    return teams.filter(
+      (team) =>
+        team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        team.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [teams, searchQuery]);
 
-  const filteredTeams = teams.filter((team) =>
-    team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    team.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const totalPages = Math.ceil(filteredTeams.length / ITEMS_PER_PAGE);
 
-  const totalPages = Math.ceil(filteredTeams.length / itemsPerPage);
+  const paginatedTeams = useMemo(() => {
+    return filteredTeams.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE
+    );
+  }, [filteredTeams, currentPage]);
 
-  const paginatedTeams = filteredTeams.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage
-  );
-
-  const handleCreate = (newTeam: Omit<Team, "id" | "createdAt" | "updatedAt">) => {
+  const handleCreate = (
+    newTeam: Omit<Team, "id" | "createdAt" | "updatedAt">
+  ) => {
     const team: Team = {
       ...newTeam,
       id: `team-${Date.now()}`,
@@ -65,6 +72,10 @@ export default function TeamsPage() {
         />
       </div>
 
+      <div className="text-sm text-muted-foreground">
+        Showing {paginatedTeams.length} of {filteredTeams.length} teams
+      </div>
+
       <TeamsTable
         teams={paginatedTeams}
         users={mockUsers}
@@ -72,9 +83,11 @@ export default function TeamsPage() {
         onDelete={handleDelete}
       />
 
-      <Suspense fallback={<div>Loading...</div>}>
-        <AppPagination totalPages={totalPages} />
-      </Suspense>
+      {totalPages > 1 && (
+        <Suspense fallback={<div>Loading...</div>}>
+          <AppPagination totalPages={totalPages} />
+        </Suspense>
+      )}
     </section>
   );
 }

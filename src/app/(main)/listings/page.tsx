@@ -30,13 +30,18 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+  PLATFORM_BADGE_OUTLINE_VARIANTS,
+  LISTING_STATUS_BADGE_OUTLINE_VARIANTS,
+} from "@/constants/badge-variants";
+import { PlatformType } from "@/type/platform";
 
 // Mock listings data
 const mockListings = [
   {
     id: "1",
     title: "Summer Vibes T-Shirt - Tropical Paradise",
-    platform: "etsy",
+    platform: "etsy" as PlatformType,
     listingId: "ETSY-123456",
     status: "active",
     price: 24.99,
@@ -48,7 +53,7 @@ const mockListings = [
   {
     id: "2",
     title: "Coffee Lover Mug - Morning Motivation",
-    platform: "amazon",
+    platform: "amazon" as PlatformType,
     listingId: "AMZ-789012",
     status: "active",
     price: 15.99,
@@ -60,7 +65,7 @@ const mockListings = [
   {
     id: "3",
     title: "Eco Tote Bag - Save The Planet",
-    platform: "shopify",
+    platform: "shopify" as PlatformType,
     listingId: "SHOP-345678",
     status: "inactive",
     price: 19.99,
@@ -72,7 +77,7 @@ const mockListings = [
   {
     id: "4",
     title: "Street Style Hoodie - Urban Art",
-    platform: "etsy",
+    platform: "etsy" as PlatformType,
     listingId: "ETSY-901234",
     status: "draft",
     price: 44.99,
@@ -83,27 +88,19 @@ const mockListings = [
   },
 ];
 
-const platformColors: Record<string, string> = {
-  etsy: "#f56400",
-  amazon: "#ff9900",
-  shopify: "#96bf48",
-};
-
-const statusColors: Record<string, string> = {
-  active: "#22c55e",
-  inactive: "#6b7280",
-  draft: "#f59e0b",
-};
-
 export default function ListingsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
   const filteredListings = mockListings.filter((listing) => {
-    const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPlatform = platformFilter === "all" || listing.platform === platformFilter;
-    const matchesStatus = statusFilter === "all" || listing.status === statusFilter;
+    const matchesSearch = listing.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesPlatform =
+      platformFilter === "all" || listing.platform === platformFilter;
+    const matchesStatus =
+      statusFilter === "all" || listing.status === statusFilter;
     return matchesSearch && matchesPlatform && matchesStatus;
   });
 
@@ -222,16 +219,13 @@ export default function ListingsPage() {
           </TableHeader>
           <TableBody>
             {filteredListings.map((listing) => (
-              <TableRow key={listing.id} className="cursor-pointer hover:bg-muted/50">
+              <TableRow
+                key={listing.id}
+                className="cursor-pointer hover:bg-muted/50"
+              >
                 <TableCell className="font-medium">{listing.title}</TableCell>
                 <TableCell>
-                  <Badge
-                    variant="outline"
-                    style={{
-                      borderColor: platformColors[listing.platform],
-                      color: platformColors[listing.platform],
-                    }}
-                  >
+                  <Badge variant={PLATFORM_BADGE_OUTLINE_VARIANTS[listing.platform]}>
                     {listing.platform}
                   </Badge>
                 </TableCell>
@@ -242,18 +236,14 @@ export default function ListingsPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    variant="secondary"
-                    style={{
-                      backgroundColor: `${statusColors[listing.status]}20`,
-                      color: statusColors[listing.status],
-                    }}
-                  >
+                  <Badge variant={LISTING_STATUS_BADGE_OUTLINE_VARIANTS[listing.status]}>
                     {listing.status}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">${listing.price}</TableCell>
-                <TableCell className="text-right">{listing.views.toLocaleString()}</TableCell>
+                <TableCell className="text-right">
+                  {listing.views.toLocaleString()}
+                </TableCell>
                 <TableCell className="text-right">{listing.sales}</TableCell>
                 <TableCell className="text-right font-medium">
                   ${listing.revenue.toFixed(2)}

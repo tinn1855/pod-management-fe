@@ -10,6 +10,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Role } from "@/type/user";
 import { Check, Shield } from "lucide-react";
+import { getColorClasses } from "@/constants";
+import { cn } from "@/lib/utils";
 
 interface RoleDetailDialogProps {
   role: Role | null;
@@ -24,14 +26,19 @@ export function RoleDetailDialog({
 }: RoleDetailDialogProps) {
   if (!role) return null;
 
+  const colorClasses = getColorClasses(role.color);
+
   // Group permissions by module
-  const permissionsByModule = role.permissions.reduce((acc, permission) => {
-    if (!acc[permission.module]) {
-      acc[permission.module] = [];
-    }
-    acc[permission.module].push(permission);
-    return acc;
-  }, {} as Record<string, typeof role.permissions>);
+  const permissionsByModule = role.permissions.reduce(
+    (acc, permission) => {
+      if (!acc[permission.module]) {
+        acc[permission.module] = [];
+      }
+      acc[permission.module].push(permission);
+      return acc;
+    },
+    {} as Record<string, typeof role.permissions>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -44,18 +51,17 @@ export function RoleDetailDialog({
           {/* Role Header */}
           <div className="flex items-center gap-4">
             <div
-              className="h-14 w-14 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: `${role.color}20` }}
+              className={cn(
+                "h-14 w-14 rounded-full flex items-center justify-center",
+                colorClasses.bgLight
+              )}
             >
-              <Shield className="h-7 w-7" style={{ color: role.color }} />
+              <Shield className={cn("h-7 w-7", colorClasses.text)} />
             </div>
             <div>
               <h3 className="text-xl font-semibold flex items-center gap-2">
                 {role.name}
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: role.color }}
-                />
+                <div className={cn("w-3 h-3 rounded-full", colorClasses.bg)} />
               </h3>
               <p className="text-muted-foreground">
                 {role.description || "No description"}
@@ -81,7 +87,9 @@ export function RoleDetailDialog({
 
           {/* Permissions by Module */}
           <div>
-            <p className="text-sm text-muted-foreground mb-4">Permissions by Module</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Permissions by Module
+            </p>
             <div className="space-y-4">
               {Object.entries(permissionsByModule).map(([module, perms]) => (
                 <div key={module} className="border rounded-lg p-4">
@@ -112,4 +120,3 @@ export function RoleDetailDialog({
     </Dialog>
   );
 }
-

@@ -26,6 +26,8 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Role, Permission } from "@/type/user";
+import { COLOR_OPTIONS } from "@/constants";
+import { cn } from "@/lib/utils";
 
 const roleFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -43,15 +45,6 @@ interface EditRoleDialogProps {
   onOpenChange: (open: boolean) => void;
   onUpdate: (role: Role) => void;
 }
-
-const colorOptions = [
-  { name: "Red", value: "red" },
-  { name: "Blue", value: "blue" },
-  { name: "Green", value: "green" },
-  { name: "Purple", value: "purple" },
-  { name: "Orange", value: "orange" },
-  { name: "Gray", value: "gray" },
-];
 
 export function EditRoleDialog({
   role,
@@ -73,13 +66,16 @@ export function EditRoleDialog({
   const selectedPermissionIds = form.watch("permissionIds");
 
   // Group permissions by module
-  const permissionsByModule = permissions.reduce((acc, permission) => {
-    if (!acc[permission.module]) {
-      acc[permission.module] = [];
-    }
-    acc[permission.module].push(permission);
-    return acc;
-  }, {} as Record<string, Permission[]>);
+  const permissionsByModule = permissions.reduce(
+    (acc, permission) => {
+      if (!acc[permission.module]) {
+        acc[permission.module] = [];
+      }
+      acc[permission.module].push(permission);
+      return acc;
+    },
+    {} as Record<string, Permission[]>
+  );
 
   useEffect(() => {
     if (role) {
@@ -129,7 +125,9 @@ export function EditRoleDialog({
 
   const isModuleSelected = (module: string) => {
     const modulePermissionIds = permissionsByModule[module].map((p) => p.id);
-    return modulePermissionIds.every((id) => selectedPermissionIds.includes(id));
+    return modulePermissionIds.every((id) =>
+      selectedPermissionIds.includes(id)
+    );
   };
 
   const isModulePartiallySelected = (module: string) => {
@@ -172,16 +170,17 @@ export function EditRoleDialog({
                   <FormItem>
                     <FormLabel>Color</FormLabel>
                     <div className="flex gap-2">
-                      {colorOptions.map((color) => (
+                      {COLOR_OPTIONS.map((color) => (
                         <button
                           key={color.value}
                           type="button"
-                          className={`w-8 h-8 rounded-full border-2 transition-all ${
+                          className={cn(
+                            "w-8 h-8 rounded-full border-2 transition-all",
+                            color.bg,
                             field.value === color.value
                               ? "border-foreground scale-110"
                               : "border-transparent"
-                          }`}
-                          style={{ backgroundColor: color.value }}
+                          )}
                           onClick={() => field.onChange(color.value)}
                           title={color.name}
                         />
@@ -217,59 +216,72 @@ export function EditRoleDialog({
                 <FormItem>
                   <FormLabel>Permissions</FormLabel>
                   <div className="border rounded-md p-4 space-y-4">
-                    {Object.entries(permissionsByModule).map(([module, modulePerms]) => (
-                      <div key={module} className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={isModuleSelected(module)}
-                            ref={(el) => {
-                              if (el) {
-                                (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate =
-                                  isModulePartiallySelected(module);
+                    {Object.entries(permissionsByModule).map(
+                      ([module, modulePerms]) => (
+                        <div key={module} className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={isModuleSelected(module)}
+                              ref={(el) => {
+                                if (el) {
+                                  (
+                                    el as HTMLButtonElement & {
+                                      indeterminate: boolean;
+                                    }
+                                  ).indeterminate =
+                                    isModulePartiallySelected(module);
+                                }
+                              }}
+                              onCheckedChange={(checked) =>
+                                toggleModule(module, checked as boolean)
                               }
-                            }}
-                            onCheckedChange={(checked) =>
-                              toggleModule(module, checked as boolean)
-                            }
-                          />
-                          <span className="font-medium flex items-center gap-2">
-                            <Shield className="h-4 w-4" />
-                            {module}
-                          </span>
-                        </div>
-                        <div className="ml-6 grid grid-cols-2 gap-2">
-                          {modulePerms.map((permission) => (
-                            <FormField
-                              key={permission.id}
-                              control={form.control}
-                              name="permissionIds"
-                              render={({ field }) => (
-                                <FormItem className="flex items-center space-x-2 space-y-0">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(permission.id)}
-                                      onCheckedChange={(checked) => {
-                                        const value = field.value || [];
-                                        if (checked) {
-                                          field.onChange([...value, permission.id]);
-                                        } else {
-                                          field.onChange(
-                                            value.filter((id) => id !== permission.id)
-                                          );
-                                        }
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <span className="text-sm">
-                                    {permission.actions.join(", ")}
-                                  </span>
-                                </FormItem>
-                              )}
                             />
-                          ))}
+                            <span className="font-medium flex items-center gap-2">
+                              <Shield className="h-4 w-4" />
+                              {module}
+                            </span>
+                          </div>
+                          <div className="ml-6 grid grid-cols-2 gap-2">
+                            {modulePerms.map((permission) => (
+                              <FormField
+                                key={permission.id}
+                                control={form.control}
+                                name="permissionIds"
+                                render={({ field }) => (
+                                  <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(
+                                          permission.id
+                                        )}
+                                        onCheckedChange={(checked) => {
+                                          const value = field.value || [];
+                                          if (checked) {
+                                            field.onChange([
+                                              ...value,
+                                              permission.id,
+                                            ]);
+                                          } else {
+                                            field.onChange(
+                                              value.filter(
+                                                (id) => id !== permission.id
+                                              )
+                                            );
+                                          }
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <span className="text-sm">
+                                      {permission.actions.join(", ")}
+                                    </span>
+                                  </FormItem>
+                                )}
+                              />
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {selectedPermissionIds.length} permission(s) selected
@@ -295,4 +307,3 @@ export function EditRoleDialog({
     </Dialog>
   );
 }
-

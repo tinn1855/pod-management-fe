@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Factory, Search, Package, CheckCircle, Clock } from "lucide-react";
 import { useState } from "react";
+import { PRODUCTION_STATUS_BADGE_OUTLINE_VARIANTS } from "@/constants/badge-variants";
 
 // Mock production data
 const mockProductions = [
@@ -51,7 +52,7 @@ const mockProductions = [
     sku: "MUG-COF-001",
     productName: "Custom Mug - Coffee Lover",
     quantity: 1,
-    status: "completed",
+    status: "shipped",
     supplier: "ABC Printing Co.",
     startedAt: "2024-01-17",
     estimatedCompletion: "2024-01-20",
@@ -63,26 +64,18 @@ const mockProductions = [
     sku: "STICKER-ANI-001",
     productName: "Sticker Pack - Cute Animals",
     quantity: 3,
-    status: "pending",
+    status: "queued",
     supplier: "DEF Production Partner",
     startedAt: null,
     estimatedCompletion: "2024-01-23",
   },
 ];
 
-const statusColors: Record<string, string> = {
-  pending: "#6b7280",
-  printing: "#3b82f6",
-  quality_check: "#f59e0b",
-  completed: "#22c55e",
-  shipped: "#10b981",
-};
-
 const statusLabels: Record<string, string> = {
-  pending: "Pending",
+  queued: "Queued",
   printing: "Printing",
   quality_check: "Quality Check",
-  completed: "Completed",
+  packing: "Packing",
   shipped: "Shipped",
 };
 
@@ -101,10 +94,11 @@ export default function ProductionPage() {
 
   const stats = {
     total: mockProductions.length,
-    pending: mockProductions.filter((p) => p.status === "pending").length,
+    queued: mockProductions.filter((p) => p.status === "queued").length,
     printing: mockProductions.filter((p) => p.status === "printing").length,
-    qualityCheck: mockProductions.filter((p) => p.status === "quality_check").length,
-    completed: mockProductions.filter((p) => p.status === "completed").length,
+    qualityCheck: mockProductions.filter((p) => p.status === "quality_check")
+      .length,
+    shipped: mockProductions.filter((p) => p.status === "shipped").length,
   };
 
   return (
@@ -122,11 +116,11 @@ export default function ProductionPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium">Queued</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
+            <div className="text-2xl font-bold">{stats.queued}</div>
           </CardContent>
         </Card>
         <Card>
@@ -149,11 +143,11 @@ export default function ProductionPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CardTitle className="text-sm font-medium">Shipped</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.completed}</div>
+            <div className="text-2xl font-bold">{stats.shipped}</div>
           </CardContent>
         </Card>
       </div>
@@ -175,10 +169,10 @@ export default function ProductionPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="queued">Queued</SelectItem>
             <SelectItem value="printing">Printing</SelectItem>
             <SelectItem value="quality_check">Quality Check</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="shipped">Shipped</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -199,19 +193,20 @@ export default function ProductionPage() {
           </TableHeader>
           <TableBody>
             {filteredProductions.map((prod) => (
-              <TableRow key={prod.id} className="cursor-pointer hover:bg-muted/50">
-                <TableCell className="font-mono text-sm">{prod.orderId}</TableCell>
+              <TableRow
+                key={prod.id}
+                className="cursor-pointer hover:bg-muted/50"
+              >
+                <TableCell className="font-mono text-sm">
+                  {prod.orderId}
+                </TableCell>
                 <TableCell className="font-mono text-sm">{prod.sku}</TableCell>
                 <TableCell>{prod.productName}</TableCell>
                 <TableCell className="text-center">{prod.quantity}</TableCell>
                 <TableCell className="text-sm">{prod.supplier}</TableCell>
                 <TableCell>
                   <Badge
-                    variant="secondary"
-                    style={{
-                      backgroundColor: `${statusColors[prod.status]}20`,
-                      color: statusColors[prod.status],
-                    }}
+                    variant={PRODUCTION_STATUS_BADGE_OUTLINE_VARIANTS[prod.status]}
                   >
                     {statusLabels[prod.status]}
                   </Badge>

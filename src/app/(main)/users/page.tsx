@@ -11,35 +11,41 @@ import {
 import { AppPagination } from "@/components/molecules/pagination";
 import { UsersTable } from "@/components/molecules/user-table";
 import { mockUsers, mockRoles, mockTeams } from "@/data/user";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { CreateUserDialog } from "@/components/molecules/user-create-dialog";
 import { User } from "@/type/user";
+import { ITEMS_PER_PAGE } from "@/constants";
 
 export default function UsersPage() {
+  const searchParams = useSearchParams();
+  const currentPage = Number(searchParams.get("page") ?? 1);
+
   const [users, setUsers] = useState<User[]>(mockUsers);
-  const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const itemsPerPage = 10;
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      const matchesSearch =
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus =
+        statusFilter === "all" || user.status === statusFilter;
+      const matchesRole = roleFilter === "all" || user.role.id === roleFilter;
+      return matchesSearch && matchesStatus && matchesRole;
+    });
+  }, [users, searchQuery, statusFilter, roleFilter]);
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || user.status === statusFilter;
-    const matchesRole = roleFilter === "all" || user.role.id === roleFilter;
-    return matchesSearch && matchesStatus && matchesRole;
-  });
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
 
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-
-  const paginatedUsers = filteredUsers.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage
-  );
+  const paginatedUsers = useMemo(() => {
+    return filteredUsers.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE
+    );
+  }, [filteredUsers, currentPage]);
 
   const handleCreate = (
     newUser: Omit<User, "id" | "createdAt" | "updatedAt">
@@ -107,6 +113,10 @@ export default function UsersPage() {
         </Select>
       </div>
 
+      <div className="text-sm text-muted-foreground">
+        Showing {paginatedUsers.length} of {filteredUsers.length} users
+      </div>
+
       <UsersTable
         users={paginatedUsers}
         roles={mockRoles}
@@ -115,9 +125,11 @@ export default function UsersPage() {
         onDelete={handleDelete}
       />
 
-      <Suspense fallback={<div>Loading...</div>}>
-        <AppPagination totalPages={totalPages} />
-      </Suspense>
+      {totalPages > 1 && (
+        <Suspense fallback={<div>Loading...</div>}>
+          <AppPagination totalPages={totalPages} />
+        </Suspense>
+      )}
     </section>
   );
 }

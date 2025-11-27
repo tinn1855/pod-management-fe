@@ -2,7 +2,13 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +32,9 @@ import { Role, Permission, PermissionModule } from "@/type/user";
 import { Check, Shield, X, Save } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ROLE_BADGE_OUTLINE_VARIANTS } from "@/constants/badge-variants";
+import { getColorClasses } from "@/constants";
+import { cn } from "@/lib/utils";
 
 export default function PermissionsPage() {
   const [roles, setRoles] = useState<Role[]>(mockRoles);
@@ -33,11 +42,12 @@ export default function PermissionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
 
-  const filteredModules = mockPermissionModules.filter((module) =>
-    module.module.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    module.permissions.some((p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+  const filteredModules = mockPermissionModules.filter(
+    (module) =>
+      module.module.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      module.permissions.some((p) =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
   );
 
   const hasPermission = (role: Role, permissionId: string) => {
@@ -60,7 +70,11 @@ export default function PermissionsPage() {
     setHasChanges(true);
   };
 
-  const toggleModulePermissions = (roleId: string, module: PermissionModule, checked: boolean) => {
+  const toggleModulePermissions = (
+    roleId: string,
+    module: PermissionModule,
+    checked: boolean
+  ) => {
     setRoles((prev) =>
       prev.map((role) => {
         if (role.id !== roleId) return role;
@@ -105,6 +119,11 @@ export default function PermissionsPage() {
     setHasChanges(false);
   };
 
+  const getRoleBadgeVariant = (roleName: string) => {
+    const normalizedRole = roleName.toLowerCase();
+    return ROLE_BADGE_OUTLINE_VARIANTS[normalizedRole] || "outline";
+  };
+
   return (
     <section className="space-y-6">
       <div className="flex items-center justify-between">
@@ -147,17 +166,22 @@ export default function PermissionsPage() {
                   <TableHead className="w-[200px] sticky left-0 bg-background">
                     Module / Permission
                   </TableHead>
-                  {roles.map((role) => (
-                    <TableHead key={role.id} className="text-center min-w-[120px]">
-                      <div className="flex flex-col items-center gap-1">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: role.color }}
-                        />
-                        <span>{role.name}</span>
-                      </div>
-                    </TableHead>
-                  ))}
+                  {roles.map((role) => {
+                    const colorClasses = getColorClasses(role.color);
+                    return (
+                      <TableHead
+                        key={role.id}
+                        className="text-center min-w-[120px]"
+                      >
+                        <div className="flex flex-col items-center gap-1">
+                          <div
+                            className={cn("w-3 h-3 rounded-full", colorClasses.bg)}
+                          />
+                          <span>{role.name}</span>
+                        </div>
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -179,12 +203,19 @@ export default function PermissionsPage() {
                               checked={status === "all"}
                               ref={(el) => {
                                 if (el) {
-                                  (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate =
-                                    status === "partial";
+                                  (
+                                    el as HTMLButtonElement & {
+                                      indeterminate: boolean;
+                                    }
+                                  ).indeterminate = status === "partial";
                                 }
                               }}
                               onCheckedChange={(checked) =>
-                                toggleModulePermissions(role.id, module, checked as boolean)
+                                toggleModulePermissions(
+                                  role.id,
+                                  module,
+                                  checked as boolean
+                                )
                               }
                             />
                           </TableCell>
@@ -231,17 +262,19 @@ export default function PermissionsPage() {
                 <SelectValue placeholder="Select a role to edit" />
               </SelectTrigger>
               <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role.id} value={role.id}>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: role.color }}
-                      />
-                      {role.name}
-                    </div>
-                  </SelectItem>
-                ))}
+                {roles.map((role) => {
+                  const colorClasses = getColorClasses(role.color);
+                  return (
+                    <SelectItem key={role.id} value={role.id}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={cn("w-3 h-3 rounded-full", colorClasses.bg)}
+                        />
+                        {role.name}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -260,19 +293,29 @@ export default function PermissionsPage() {
                         checked={getModuleStatus(selectedRole, module) === "all"}
                         ref={(el) => {
                           if (el) {
-                            (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate =
+                            (
+                              el as HTMLButtonElement & {
+                                indeterminate: boolean;
+                              }
+                            ).indeterminate =
                               getModuleStatus(selectedRole, module) === "partial";
                           }
                         }}
                         onCheckedChange={(checked) =>
-                          toggleModulePermissions(selectedRole.id, module, checked as boolean)
+                          toggleModulePermissions(
+                            selectedRole.id,
+                            module,
+                            checked as boolean
+                          )
                         }
                       />
                     </div>
                     <CardDescription>
-                      {selectedRole.permissions.filter((p) =>
-                        module.permissions.some((mp) => mp.id === p.id)
-                      ).length}{" "}
+                      {
+                        selectedRole.permissions.filter((p) =>
+                          module.permissions.some((mp) => mp.id === p.id)
+                        ).length
+                      }{" "}
                       of {module.permissions.length} permissions enabled
                     </CardDescription>
                   </CardHeader>
@@ -333,13 +376,7 @@ export default function PermissionsPage() {
                         <TableHead>Permission</TableHead>
                         {roles.map((role) => (
                           <TableHead key={role.id} className="text-center">
-                            <Badge
-                              variant="outline"
-                              style={{
-                                borderColor: role.color,
-                                color: role.color,
-                              }}
-                            >
+                            <Badge variant={getRoleBadgeVariant(role.name)}>
                               {role.name}
                             </Badge>
                           </TableHead>
@@ -351,7 +388,9 @@ export default function PermissionsPage() {
                         <TableRow key={permission.id}>
                           <TableCell>
                             <div>
-                              <span className="font-medium">{permission.name}</span>
+                              <span className="font-medium">
+                                {permission.name}
+                              </span>
                               <p className="text-xs text-muted-foreground">
                                 {permission.description}
                               </p>
@@ -379,4 +418,3 @@ export default function PermissionsPage() {
     </section>
   );
 }
-

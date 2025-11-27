@@ -10,12 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Order, OrderStatus } from "@/type/order";
+import { getStatusLabel, getPlatformLabel } from "@/data/order";
 import {
-  getStatusLabel,
-  getStatusColor,
-  getSourceLabel,
-  getSourceColor,
-} from "@/data/order";
+  PLATFORM_BADGE_OUTLINE_VARIANTS,
+  ORDER_STATUS_BADGE_OUTLINE_VARIANTS,
+} from "@/constants/badge-variants";
 import {
   Package,
   Truck,
@@ -27,6 +26,7 @@ import {
   CheckCircle,
   XCircle,
   ExternalLink,
+  Store,
 } from "lucide-react";
 
 interface OrderDetailDialogProps {
@@ -80,13 +80,7 @@ export function OrderDetailDialog({
               <Package className="h-5 w-5" />
               {order.orderNumber}
             </DialogTitle>
-            <Badge
-              variant="secondary"
-              style={{
-                backgroundColor: `${getStatusColor(order.status)}20`,
-                color: getStatusColor(order.status),
-              }}
-            >
+            <Badge variant={ORDER_STATUS_BADGE_OUTLINE_VARIANTS[order.status]}>
               {getStatusLabel(order.status)}
             </Badge>
           </div>
@@ -96,16 +90,12 @@ export function OrderDetailDialog({
           {/* Order Info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground">Order Source</p>
+              <p className="text-sm text-muted-foreground">Platform</p>
               <Badge
-                variant="outline"
+                variant={PLATFORM_BADGE_OUTLINE_VARIANTS[order.platform]}
                 className="mt-1"
-                style={{
-                  borderColor: getSourceColor(order.source),
-                  color: getSourceColor(order.source),
-                }}
               >
-                {getSourceLabel(order.source)}
+                {getPlatformLabel(order.platform)}
               </Badge>
               {order.externalOrderId && (
                 <p className="text-xs text-muted-foreground mt-1">
@@ -118,6 +108,21 @@ export function OrderDetailDialog({
               <p className="font-medium">{formatDate(order.createdAt)}</p>
             </div>
           </div>
+
+          {/* Store Info */}
+          {order.store && (
+            <div className="bg-muted/50 rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <Store className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="font-medium text-sm">{order.store.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Account: {order.store.account.name}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <Separator />
 
@@ -286,12 +291,22 @@ export function OrderDetailDialog({
                       onOpenChange(false);
                     }}
                   >
-                    {status === "processing" && <Package className="h-4 w-4 mr-1" />}
-                    {status === "designing" && <Upload className="h-4 w-4 mr-1" />}
-                    {status === "production" && <Package className="h-4 w-4 mr-1" />}
+                    {status === "processing" && (
+                      <Package className="h-4 w-4 mr-1" />
+                    )}
+                    {status === "designing" && (
+                      <Upload className="h-4 w-4 mr-1" />
+                    )}
+                    {status === "production" && (
+                      <Package className="h-4 w-4 mr-1" />
+                    )}
                     {status === "shipped" && <Truck className="h-4 w-4 mr-1" />}
-                    {status === "delivered" && <CheckCircle className="h-4 w-4 mr-1" />}
-                    {status === "cancelled" && <XCircle className="h-4 w-4 mr-1" />}
+                    {status === "delivered" && (
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                    )}
+                    {status === "cancelled" && (
+                      <XCircle className="h-4 w-4 mr-1" />
+                    )}
                     {getStatusLabel(status)}
                   </Button>
                 ))}

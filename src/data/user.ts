@@ -381,28 +381,22 @@ export const mockRoles: Role[] = [
     description:
       "Nhận order, Tạo mẫu, Đẩy task cho Designer, Duyệt file thiết kế, Gửi thiết kế cho supplier, Tạo listing",
     permissions: getPermissionsByIds([
-      // Orders - full access
       "perm-orders-create",
       "perm-orders-read",
       "perm-orders-update",
-      // Designs - create, read, approve
       "perm-designs-create",
       "perm-designs-read",
       "perm-designs-approve",
-      // Tasks - create and assign to designer
       "perm-tasks-create",
       "perm-tasks-read",
       "perm-tasks-assign",
       "perm-tasks-review",
-      // Listings - full access
       "perm-listings-create",
       "perm-listings-read",
       "perm-listings-update",
       "perm-listings-delete",
-      // Suppliers - send designs
       "perm-suppliers-read",
       "perm-suppliers-send",
-      // Dashboard - basic view
       "perm-dashboard-read",
     ]),
     color: "#2563eb", // blue-600
@@ -414,17 +408,13 @@ export const mockRoles: Role[] = [
     name: "Designer",
     description: "Nhận task từ Seller, Thiết kế, Upload file hoàn thiện",
     permissions: getPermissionsByIds([
-      // Tasks - read and update status
       "perm-tasks-read",
       "perm-tasks-update",
-      // Designs - create, read, update, upload
       "perm-designs-create",
       "perm-designs-read",
       "perm-designs-update",
       "perm-designs-upload",
-      // Orders - read only (to understand requirements)
       "perm-orders-read",
-      // Dashboard - basic view
       "perm-dashboard-read",
     ]),
     color: "#9333ea", // purple-600
@@ -436,16 +426,12 @@ export const mockRoles: Role[] = [
     name: "Supplier",
     description: "Nhận lệnh in, Xử lý đơn, Tracking sản xuất",
     permissions: getPermissionsByIds([
-      // Production - full access
       "perm-production-read",
       "perm-production-update",
       "perm-production-tracking",
       "perm-production-batch",
-      // Orders - read only
       "perm-orders-read",
-      // Designs - read only (to see design files)
       "perm-designs-read",
-      // Dashboard - basic view
       "perm-dashboard-read",
     ]),
     color: "#16a34a", // green-600
@@ -455,104 +441,156 @@ export const mockRoles: Role[] = [
 ];
 
 // ============================================
-// USERS - Sample users for each role
+// USER GENERATOR - Generate 50 users
 // ============================================
 
+const firstNames = [
+  "Nguyễn",
+  "Trần",
+  "Lê",
+  "Phạm",
+  "Hoàng",
+  "Huỳnh",
+  "Phan",
+  "Vũ",
+  "Võ",
+  "Đặng",
+  "Bùi",
+  "Đỗ",
+  "Hồ",
+  "Ngô",
+  "Dương",
+  "Lý",
+  "Đinh",
+  "Mai",
+  "Trương",
+  "Lưu",
+];
+
+const middleNames = [
+  "Văn",
+  "Thị",
+  "Minh",
+  "Hoàng",
+  "Đức",
+  "Hữu",
+  "Quốc",
+  "Thanh",
+  "Kim",
+  "Anh",
+  "Ngọc",
+  "Bảo",
+  "Phương",
+  "Hải",
+  "Tuấn",
+  "Thu",
+  "Xuân",
+  "Hồng",
+  "Quang",
+  "Thành",
+];
+
+const lastNames = [
+  "Anh",
+  "Bình",
+  "Cường",
+  "Dũng",
+  "Hùng",
+  "Khánh",
+  "Long",
+  "Minh",
+  "Nam",
+  "Phong",
+  "Quân",
+  "Sơn",
+  "Tâm",
+  "Thành",
+  "Tuấn",
+  "Việt",
+  "Hà",
+  "Lan",
+  "Mai",
+  "Ngọc",
+  "Oanh",
+  "Phượng",
+  "Quyên",
+  "Thảo",
+  "Trang",
+  "Uyên",
+  "Vân",
+  "Yến",
+  "Linh",
+  "Hương",
+];
+
+const statusOptions: Array<"active" | "inactive" | "pending"> = [
+  "active",
+  "active",
+  "active",
+  "inactive",
+  "pending",
+];
+
+function generateRandomDate(start: Date, end: Date): string {
+  const date = new Date(
+    start.getTime() + Math.random() * (end.getTime() - start.getTime())
+  );
+  return date.toISOString().split("T")[0];
+}
+
+function generateUser(index: number, role: Role): User {
+  const firstName = firstNames[index % firstNames.length];
+  const middleName =
+    middleNames[Math.floor(index / firstNames.length) % middleNames.length];
+  const lastName = lastNames[index % lastNames.length];
+  const name = `${firstName} ${middleName} ${lastName}`;
+
+  const emailPrefix = `${lastName.toLowerCase()}${index + 1}`;
+  const emailDomain =
+    role.name === "Supplier" ? "partner.com" : "podmanagement.com";
+
+  const createdAt = generateRandomDate(
+    new Date("2024-01-01"),
+    new Date("2024-06-01")
+  );
+  const updatedAt = generateRandomDate(
+    new Date(createdAt),
+    new Date("2024-11-27")
+  );
+
+  return {
+    id: `user-${role.name.toLowerCase()}-${index + 1}`,
+    name,
+    email: `${emailPrefix}@${emailDomain}`,
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${role.name}${
+      index + 1
+    }`,
+    role,
+    status: statusOptions[index % statusOptions.length],
+    createdAt,
+    updatedAt,
+  };
+}
+
+// Generate 50 users: 3 Admin, 12 Seller, 20 Designer, 15 Supplier
+const adminUsers: User[] = Array.from({ length: 3 }, (_, i) =>
+  generateUser(i, mockRoles[0])
+);
+const sellerUsers: User[] = Array.from({ length: 12 }, (_, i) =>
+  generateUser(i, mockRoles[1])
+);
+const designerUsers: User[] = Array.from({ length: 20 }, (_, i) =>
+  generateUser(i, mockRoles[2])
+);
+const supplierUsers: User[] = Array.from({ length: 15 }, (_, i) =>
+  generateUser(i, mockRoles[3])
+);
+
 export const mockUsers: User[] = [
-  // Admin users
-  {
-    id: "user-admin-1",
-    name: "Nguyễn Văn Admin",
-    email: "admin@podmanagement.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin1",
-    role: mockRoles[0], // Admin
-    status: "active",
-    createdAt: "2024-01-01",
-    updatedAt: "2024-01-15",
-  },
-  // Seller users
-  {
-    id: "user-seller-1",
-    name: "Trần Thị Seller",
-    email: "seller1@podmanagement.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Seller1",
-    role: mockRoles[1], // Seller
-    status: "active",
-    createdAt: "2024-01-05",
-    updatedAt: "2024-01-20",
-  },
-  {
-    id: "user-seller-2",
-    name: "Lê Văn Bán",
-    email: "seller2@podmanagement.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Seller2",
-    role: mockRoles[1], // Seller
-    status: "active",
-    createdAt: "2024-01-06",
-    updatedAt: "2024-01-21",
-  },
-  // Designer users
-  {
-    id: "user-designer-1",
-    name: "Phạm Minh Designer",
-    email: "designer1@podmanagement.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Designer1",
-    role: mockRoles[2], // Designer
-    status: "active",
-    createdAt: "2024-01-10",
-    updatedAt: "2024-01-25",
-  },
-  {
-    id: "user-designer-2",
-    name: "Hoàng Thị Thiết Kế",
-    email: "designer2@podmanagement.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Designer2",
-    role: mockRoles[2], // Designer
-    status: "active",
-    createdAt: "2024-01-11",
-    updatedAt: "2024-01-26",
-  },
-  {
-    id: "user-designer-3",
-    name: "Vũ Văn Graphic",
-    email: "designer3@podmanagement.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Designer3",
-    role: mockRoles[2], // Designer
-    status: "pending",
-    createdAt: "2024-01-14",
-    updatedAt: "2024-01-30",
-  },
-  // Supplier users
-  {
-    id: "user-supplier-1",
-    name: "Công ty In Ấn ABC",
-    email: "supplier1@printing.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Supplier1",
-    role: mockRoles[3], // Supplier
-    status: "active",
-    createdAt: "2024-01-12",
-    updatedAt: "2024-01-28",
-  },
-  {
-    id: "user-supplier-2",
-    name: "Xưởng Sản Xuất XYZ",
-    email: "supplier2@production.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Supplier2",
-    role: mockRoles[3], // Supplier
-    status: "active",
-    createdAt: "2024-01-16",
-    updatedAt: "2024-02-01",
-  },
-  {
-    id: "user-supplier-3",
-    name: "Đối Tác Sản Xuất DEF",
-    email: "supplier3@partner.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Supplier3",
-    role: mockRoles[3], // Supplier
-    status: "inactive",
-    createdAt: "2024-01-18",
-    updatedAt: "2024-02-05",
-  },
+  ...adminUsers,
+  ...sellerUsers,
+  ...designerUsers,
+  ...supplierUsers,
 ];
 
 // ============================================
@@ -565,8 +603,8 @@ export const mockTeams: Team[] = [
     name: "Seller Team",
     description:
       "Đội ngũ bán hàng - Nhận order, quản lý listing và giao việc cho designer",
-    members: [mockUsers[1], mockUsers[2]], // Sellers
-    leader: mockUsers[1],
+    members: sellerUsers,
+    leader: sellerUsers[0],
     createdAt: "2024-01-01",
     updatedAt: "2024-01-15",
   },
@@ -574,8 +612,8 @@ export const mockTeams: Team[] = [
     id: "team-designers",
     name: "Design Team",
     description: "Đội ngũ thiết kế - Nhận task từ Seller và thực hiện thiết kế",
-    members: [mockUsers[3], mockUsers[4], mockUsers[5]], // Designers
-    leader: mockUsers[3],
+    members: designerUsers,
+    leader: designerUsers[0],
     createdAt: "2024-01-05",
     updatedAt: "2024-01-20",
   },
@@ -583,22 +621,23 @@ export const mockTeams: Team[] = [
     id: "team-suppliers",
     name: "Production Partners",
     description: "Đối tác sản xuất - Nhận lệnh in và tracking sản xuất",
-    members: [mockUsers[6], mockUsers[7], mockUsers[8]], // Suppliers
-    leader: mockUsers[6],
+    members: supplierUsers,
+    leader: supplierUsers[0],
     createdAt: "2024-01-10",
     updatedAt: "2024-01-25",
   },
 ];
 
 // Update users with team references
-mockUsers[1].team = mockTeams[0]; // Seller 1
-mockUsers[2].team = mockTeams[0]; // Seller 2
-mockUsers[3].team = mockTeams[1]; // Designer 1
-mockUsers[4].team = mockTeams[1]; // Designer 2
-mockUsers[5].team = mockTeams[1]; // Designer 3
-mockUsers[6].team = mockTeams[2]; // Supplier 1
-mockUsers[7].team = mockTeams[2]; // Supplier 2
-mockUsers[8].team = mockTeams[2]; // Supplier 3
+sellerUsers.forEach((user) => {
+  user.team = mockTeams[0];
+});
+designerUsers.forEach((user) => {
+  user.team = mockTeams[1];
+});
+supplierUsers.forEach((user) => {
+  user.team = mockTeams[2];
+});
 
 // ============================================
 // HELPER FUNCTIONS

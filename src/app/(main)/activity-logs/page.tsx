@@ -23,13 +23,14 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { mockUsers } from "@/data/user";
+import { ACTIVITY_TYPE_BADGE_OUTLINE_VARIANTS } from "@/constants/badge-variants";
 
 // Mock activity logs
 const mockLogs = [
   {
     id: "log-1",
     user: mockUsers[1],
-    action: "created",
+    action: "create",
     module: "orders",
     description: "Created new order ORD-2024-008",
     timestamp: "2024-01-21T14:30:00Z",
@@ -38,7 +39,7 @@ const mockLogs = [
   {
     id: "log-2",
     user: mockUsers[3],
-    action: "updated",
+    action: "update",
     module: "designs",
     description: "Uploaded new design file for Idea #5",
     timestamp: "2024-01-21T13:45:00Z",
@@ -47,7 +48,7 @@ const mockLogs = [
   {
     id: "log-3",
     user: mockUsers[1],
-    action: "updated",
+    action: "update",
     module: "ideas",
     description: "Changed Idea #2 status to Check Design",
     timestamp: "2024-01-21T12:20:00Z",
@@ -56,7 +57,7 @@ const mockLogs = [
   {
     id: "log-4",
     user: mockUsers[0],
-    action: "created",
+    action: "create",
     module: "users",
     description: "Created new account for Designer",
     timestamp: "2024-01-21T11:00:00Z",
@@ -65,7 +66,7 @@ const mockLogs = [
   {
     id: "log-5",
     user: mockUsers[6],
-    action: "updated",
+    action: "update",
     module: "production",
     description: "Updated production status: Printing",
     timestamp: "2024-01-21T10:30:00Z",
@@ -74,7 +75,7 @@ const mockLogs = [
   {
     id: "log-6",
     user: mockUsers[2],
-    action: "created",
+    action: "create",
     module: "content",
     description: "Created new content for Canvas Art product",
     timestamp: "2024-01-21T09:15:00Z",
@@ -83,7 +84,7 @@ const mockLogs = [
   {
     id: "log-7",
     user: mockUsers[1],
-    action: "deleted",
+    action: "delete",
     module: "orders",
     description: "Cancelled order ORD-2024-007",
     timestamp: "2024-01-20T16:45:00Z",
@@ -92,7 +93,7 @@ const mockLogs = [
   {
     id: "log-8",
     user: mockUsers[0],
-    action: "updated",
+    action: "update",
     module: "settings",
     description: "Updated permissions for Designer role",
     timestamp: "2024-01-20T15:30:00Z",
@@ -100,10 +101,12 @@ const mockLogs = [
   },
 ];
 
-const actionColors: Record<string, string> = {
-  created: "#22c55e",
-  updated: "#3b82f6",
-  deleted: "#ef4444",
+const actionLabels: Record<string, string> = {
+  create: "Created",
+  update: "Updated",
+  delete: "Deleted",
+  login: "Logged In",
+  logout: "Logged Out",
 };
 
 const moduleIcons: Record<string, React.ElementType> = {
@@ -122,7 +125,9 @@ export default function ActivityLogsPage() {
   const [actionFilter, setActionFilter] = useState("all");
 
   const filteredLogs = mockLogs.filter((log) => {
-    const matchesSearch = log.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = log.description
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
     const matchesModule = moduleFilter === "all" || log.module === moduleFilter;
     const matchesAction = actionFilter === "all" || log.action === actionFilter;
     return matchesSearch && matchesModule && matchesAction;
@@ -140,7 +145,12 @@ export default function ActivityLogsPage() {
   };
 
   const getInitials = (name: string) =>
-    name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
 
   return (
     <section className="space-y-6">
@@ -171,7 +181,7 @@ export default function ActivityLogsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {mockLogs.filter((l) => l.action === "created").length}
+              {mockLogs.filter((l) => l.action === "create").length}
             </div>
           </CardContent>
         </Card>
@@ -182,7 +192,7 @@ export default function ActivityLogsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {mockLogs.filter((l) => l.action === "updated").length}
+              {mockLogs.filter((l) => l.action === "update").length}
             </div>
           </CardContent>
         </Card>
@@ -193,7 +203,7 @@ export default function ActivityLogsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {mockLogs.filter((l) => l.action === "deleted").length}
+              {mockLogs.filter((l) => l.action === "delete").length}
             </div>
           </CardContent>
         </Card>
@@ -231,9 +241,9 @@ export default function ActivityLogsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Actions</SelectItem>
-            <SelectItem value="created">Created</SelectItem>
-            <SelectItem value="updated">Updated</SelectItem>
-            <SelectItem value="deleted">Deleted</SelectItem>
+            <SelectItem value="create">Created</SelectItem>
+            <SelectItem value="update">Updated</SelectItem>
+            <SelectItem value="delete">Deleted</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -255,22 +265,21 @@ export default function ActivityLogsPage() {
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{log.user.name}</span>
                   <Badge
-                    variant="secondary"
-                    style={{
-                      backgroundColor: `${actionColors[log.action]}20`,
-                      color: actionColors[log.action],
-                    }}
+                    variant={
+                      ACTIVITY_TYPE_BADGE_OUTLINE_VARIANTS[log.action] ||
+                      "secondary"
+                    }
                   >
-                    {log.action === "created" && "Created"}
-                    {log.action === "updated" && "Updated"}
-                    {log.action === "deleted" && "Deleted"}
+                    {actionLabels[log.action] || log.action}
                   </Badge>
                   <Badge variant="outline" className="gap-1">
                     <ModuleIcon className="h-3 w-3" />
                     {log.module}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">{log.description}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {log.description}
+                </p>
                 <p className="text-xs text-muted-foreground mt-2">
                   {formatTime(log.timestamp)}
                 </p>

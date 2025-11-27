@@ -20,10 +20,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ClipboardList, Search, Plus, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  ClipboardList,
+  Search,
+  Plus,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 import { useState } from "react";
 import { mockUsers } from "@/data/user";
 import { toast } from "sonner";
+import {
+  TASK_STATUS_BADGE_OUTLINE_VARIANTS,
+  PRIORITY_BADGE_OUTLINE_VARIANTS,
+} from "@/constants/badge-variants";
 
 // Mock tasks data
 const mockTasks = [
@@ -44,7 +55,7 @@ const mockTasks = [
     ideaId: "idea-2",
     assignee: mockUsers[4],
     assignedBy: mockUsers[1],
-    status: "pending",
+    status: "todo",
     priority: "medium",
     dueDate: "2024-01-23",
     createdAt: "2024-01-16",
@@ -66,32 +77,18 @@ const mockTasks = [
     ideaId: "idea-7",
     assignee: mockUsers[4],
     assignedBy: mockUsers[2],
-    status: "completed",
+    status: "done",
     priority: "low",
     dueDate: "2024-01-20",
     createdAt: "2024-01-17",
   },
 ];
 
-const statusColors: Record<string, string> = {
-  pending: "#6b7280",
-  in_progress: "#3b82f6",
-  review: "#f59e0b",
-  completed: "#22c55e",
-};
-
 const statusLabels: Record<string, string> = {
-  pending: "Pending",
+  todo: "Pending",
   in_progress: "In Progress",
   review: "In Review",
-  completed: "Completed",
-};
-
-const priorityColors: Record<string, string> = {
-  low: "#6b7280",
-  medium: "#3b82f6",
-  high: "#f59e0b",
-  urgent: "#ef4444",
+  done: "Completed",
 };
 
 export default function TasksPage() {
@@ -99,20 +96,27 @@ export default function TasksPage() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const filteredTasks = mockTasks.filter((task) => {
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = task.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || task.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const getInitials = (name: string) =>
-    name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
 
   const stats = {
     total: mockTasks.length,
-    pending: mockTasks.filter((t) => t.status === "pending").length,
+    todo: mockTasks.filter((t) => t.status === "todo").length,
     inProgress: mockTasks.filter((t) => t.status === "in_progress").length,
     review: mockTasks.filter((t) => t.status === "review").length,
-    completed: mockTasks.filter((t) => t.status === "completed").length,
+    done: mockTasks.filter((t) => t.status === "done").length,
   };
 
   const handleCreateTask = () => {
@@ -142,7 +146,7 @@ export default function TasksPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
+            <div className="text-2xl font-bold">{stats.todo}</div>
           </CardContent>
         </Card>
         <Card>
@@ -169,7 +173,7 @@ export default function TasksPage() {
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.completed}</div>
+            <div className="text-2xl font-bold">{stats.done}</div>
           </CardContent>
         </Card>
       </div>
@@ -191,10 +195,10 @@ export default function TasksPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="todo">Pending</SelectItem>
             <SelectItem value="in_progress">In Progress</SelectItem>
             <SelectItem value="review">In Review</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="done">Completed</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -214,7 +218,10 @@ export default function TasksPage() {
           </TableHeader>
           <TableBody>
             {filteredTasks.map((task) => (
-              <TableRow key={task.id} className="cursor-pointer hover:bg-muted/50">
+              <TableRow
+                key={task.id}
+                className="cursor-pointer hover:bg-muted/50"
+              >
                 <TableCell>
                   <div>
                     <p className="font-medium">{task.title}</p>
@@ -246,24 +253,12 @@ export default function TasksPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    variant="secondary"
-                    style={{
-                      backgroundColor: `${statusColors[task.status]}20`,
-                      color: statusColors[task.status],
-                    }}
-                  >
+                  <Badge variant={TASK_STATUS_BADGE_OUTLINE_VARIANTS[task.status]}>
                     {statusLabels[task.status]}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    variant="outline"
-                    style={{
-                      borderColor: priorityColors[task.priority],
-                      color: priorityColors[task.priority],
-                    }}
-                  >
+                  <Badge variant={PRIORITY_BADGE_OUTLINE_VARIANTS[task.priority]}>
                     {task.priority}
                   </Badge>
                 </TableCell>

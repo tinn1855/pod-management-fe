@@ -10,18 +10,16 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { User } from "@/type/user";
+import {
+  ROLE_BADGE_OUTLINE_VARIANTS,
+  USER_STATUS_BADGE_VARIANTS,
+} from "@/constants/badge-variants";
 
 interface UserDetailDialogProps {
   user: User | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const statusColors = {
-  active: "success",
-  inactive: "secondary",
-  pending: "warning",
-} as const;
 
 export function UserDetailDialog({
   user,
@@ -37,6 +35,11 @@ export function UserDetailDialog({
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getRoleBadgeVariant = (roleName: string) => {
+    const normalizedRole = roleName.toLowerCase();
+    return ROLE_BADGE_OUTLINE_VARIANTS[normalizedRole] || "outline";
   };
 
   return (
@@ -67,20 +70,16 @@ export function UserDetailDialog({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Role</p>
-              <Badge
-                variant="outline"
-                className="mt-1"
-                style={{
-                  borderColor: user.role.color,
-                  color: user.role.color,
-                }}
-              >
+              <Badge variant={getRoleBadgeVariant(user.role.name)} className="mt-1">
                 {user.role.name}
               </Badge>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Status</p>
-              <Badge variant={statusColors[user.status]} className="mt-1">
+              <Badge
+                variant={USER_STATUS_BADGE_VARIANTS[user.status] || "secondary"}
+                className="mt-1"
+              >
                 {user.status}
               </Badge>
             </div>
@@ -117,4 +116,3 @@ export function UserDetailDialog({
     </Dialog>
   );
 }
-

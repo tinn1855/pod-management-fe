@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,8 +20,6 @@ import {
 } from "lucide-react";
 import {
   mockContents,
-  getStatusLabel,
-  getStatusColor,
   getPlatformLabel,
   getContentStats,
 } from "@/data/content";
@@ -28,11 +27,18 @@ import { Content, ContentStatus } from "@/type/content";
 import { ContentTable } from "@/components/molecules/content-table";
 import { ContentDetailDialog } from "@/components/molecules/content-detail-dialog";
 import { CreateContentDialog } from "@/components/molecules/content-create-dialog";
+import { AppPagination } from "@/components/molecules/pagination";
 import { mockDesigns } from "@/data/idea";
 import { mockUsers } from "@/data/user";
 import { toast } from "sonner";
+import { ITEMS_PER_PAGE } from "@/constants";
+import { CONTENT_PLATFORM_BADGE_OUTLINE_VARIANTS } from "@/constants/badge-variants";
+import { Platform as ContentPlatform } from "@/type/content";
 
 export default function ContentPage() {
+  const searchParams = useSearchParams();
+  const currentPage = Number(searchParams.get("page") ?? 1);
+
   const [contents, setContents] = useState<Content[]>(mockContents);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -40,15 +46,26 @@ export default function ContentPage() {
   const [selectedContent, setSelectedContent] = useState<Content | null>(null);
 
   // Filter contents
-  const filteredContents = contents.filter((content) => {
-    const matchesSearch =
-      content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      content.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      content.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesStatus = statusFilter === "all" || content.status === statusFilter;
-    const matchesPlatform = platformFilter === "all" || content.platform === platformFilter;
-    return matchesSearch && matchesStatus && matchesPlatform;
-  });
+  const filteredContents = useMemo(() => {
+    return contents.filter((content) => {
+      const matchesSearch =
+        content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        content.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        content.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesStatus = statusFilter === "all" || content.status === statusFilter;
+      const matchesPlatform = platformFilter === "all" || content.platform === platformFilter;
+      return matchesSearch && matchesStatus && matchesPlatform;
+    });
+  }, [contents, searchQuery, statusFilter, platformFilter]);
+
+  const totalPages = Math.ceil(filteredContents.length / ITEMS_PER_PAGE);
+
+  const paginatedContents = useMemo(() => {
+    return filteredContents.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE
+    );
+  }, [filteredContents, currentPage]);
 
   const stats = getContentStats(contents);
 
@@ -149,16 +166,16 @@ export default function ContentPage() {
 
       {/* Platform Stats */}
       <div className="flex flex-wrap gap-2">
-        {(["etsy", "amazon", "shopify", "ebay", "tiktok"] as const).map((platform) => (
+        {(["etsy", "amazon", "shopify", "ebay", "other"] as ContentPlatform[]).map((platform) => (
           <Badge
             key={platform}
-            variant="outline"
+            variant={
+              platformFilter === platform
+                ? CONTENT_PLATFORM_BADGE_OUTLINE_VARIANTS[platform]
+                : "outline"
+            }
             className="cursor-pointer"
             onClick={() => setPlatformFilter(platform === platformFilter ? "all" : platform)}
-            style={{
-              borderColor: platformFilter === platform ? getPlatformLabel(platform) : undefined,
-              backgroundColor: platformFilter === platform ? `${getPlatformLabel(platform)}10` : undefined,
-            }}
           >
             {getPlatformLabel(platform)}: {stats.byPlatform[platform]}
           </Badge>
@@ -229,13 +246,24 @@ export default function ContentPage() {
         ))}
       </div>
 
+      <div className="text-sm text-muted-foreground">
+        Showing {paginatedContents.length} of {filteredContents.length} content items
+      </div>
+
       {/* Content Table */}
       <ContentTable
-        contents={filteredContents}
+        contents={paginatedContents}
         onUpdateStatus={handleUpdateStatus}
         onDelete={handleDeleteContent}
         onViewDetail={setSelectedContent}
       />
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Suspense fallback={<div>Loading...</div>}>
+          <AppPagination totalPages={totalPages} />
+        </Suspense>
+      )}
 
       {/* Content Detail Dialog */}
       <ContentDetailDialog
@@ -247,4 +275,3 @@ export default function ContentPage() {
     </section>
   );
 }
-

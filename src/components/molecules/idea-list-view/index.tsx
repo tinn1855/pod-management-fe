@@ -19,11 +19,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Idea, IdeaStatus } from "@/type/idea";
+import { getStatusLabel } from "@/data/idea";
 import {
-  getStatusColor,
-  getStatusLabel,
-  getPriorityColor,
-} from "@/data/idea";
+  IDEA_STATUS_BADGE_OUTLINE_VARIANTS,
+  PRIORITY_BADGE_OUTLINE_VARIANTS,
+} from "@/constants/badge-variants";
 import {
   MessageSquare,
   MoreHorizontal,
@@ -88,24 +88,12 @@ export function IdeaListView({
                 </div>
               </TableCell>
               <TableCell>
-                <Badge
-                  variant="secondary"
-                  style={{
-                    backgroundColor: `${getStatusColor(idea.status)}20`,
-                    color: getStatusColor(idea.status),
-                  }}
-                >
+                <Badge variant={IDEA_STATUS_BADGE_OUTLINE_VARIANTS[idea.status]}>
                   {getStatusLabel(idea.status)}
                 </Badge>
               </TableCell>
               <TableCell>
-                <Badge
-                  variant="outline"
-                  style={{
-                    borderColor: getPriorityColor(idea.priority),
-                    color: getPriorityColor(idea.priority),
-                  }}
-                >
+                <Badge variant={PRIORITY_BADGE_OUTLINE_VARIANTS[idea.priority]}>
                   {idea.priority}
                 </Badge>
               </TableCell>
@@ -175,9 +163,9 @@ export function IdeaListView({
                           key={status}
                           onClick={() => onUpdateStatus(idea.id, status)}
                         >
-                          <div
-                            className="w-2 h-2 rounded-full mr-2"
-                            style={{ backgroundColor: getStatusColor(status) }}
+                          <Badge
+                            variant={IDEA_STATUS_BADGE_OUTLINE_VARIANTS[status]}
+                            className="w-2 h-2 p-0 mr-2 rounded-full"
                           />
                           {getStatusLabel(status)}
                         </DropdownMenuItem>
@@ -197,7 +185,10 @@ export function IdeaListView({
           ))}
           {ideas.length === 0 && (
             <TableRow>
-              <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
+              <TableCell
+                colSpan={9}
+                className="text-center py-10 text-muted-foreground"
+              >
                 No ideas found
               </TableCell>
             </TableRow>

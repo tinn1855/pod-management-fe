@@ -11,9 +11,11 @@ import {
   LayoutDashboard,
   Lightbulb,
   LogOut,
+  Package,
   PenTool,
   Shield,
   ShoppingCart,
+  Store,
   Truck,
   User2,
   Users,
@@ -44,21 +46,22 @@ import { useAuth } from "@/contexts/auth.context";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// Menu items organized by POD workflow
-const mainMenuItems = [
-  {
-    title: "Dashboard",
-    url: "/",
-    icon: LayoutDashboard,
-  },
-];
-
 // Sales menu (Seller)
 const salesMenuItems = [
   {
     title: "Orders",
     url: "/orders",
     icon: ShoppingCart,
+  },
+  {
+    title: "Accounts",
+    url: "/accounts",
+    icon: Store,
+  },
+  {
+    title: "Products",
+    url: "/products",
+    icon: Package,
   },
   {
     title: "Listings",
@@ -143,7 +146,13 @@ export function AppSidebar() {
     return pathname.startsWith(url);
   };
 
-  const renderMenuItems = (items: typeof mainMenuItems) => (
+  const renderMenuItems = (
+    items:
+      | typeof salesMenuItems
+      | typeof designMenuItems
+      | typeof productionMenuItems
+      | typeof adminMenuItems
+  ) => (
     <SidebarMenu>
       {items.map((item) => (
         <SidebarMenuItem key={item.title}>
@@ -171,7 +180,9 @@ export function AppSidebar() {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Pod Management</span>
-                  <span className="truncate text-xs text-muted-foreground">Dashboard</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    Dashboard
+                  </span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -180,14 +191,6 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Main */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Main</SidebarGroupLabel>
-          <SidebarGroupContent>
-            {renderMenuItems(mainMenuItems)}
-          </SidebarGroupContent>
-        </SidebarGroup>
-
         {/* Sales - Seller */}
         <SidebarGroup>
           <SidebarGroupLabel>Sales</SidebarGroupLabel>

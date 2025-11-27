@@ -10,12 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Content, ContentStatus } from "@/type/content";
+import { getStatusLabel, getPlatformLabel } from "@/data/content";
 import {
-  getStatusLabel,
-  getStatusColor,
-  getPlatformLabel,
-  getPlatformColor,
-} from "@/data/content";
+  CONTENT_STATUS_BADGE_OUTLINE_VARIANTS,
+  CONTENT_PLATFORM_BADGE_OUTLINE_VARIANTS,
+} from "@/constants/badge-variants";
 import {
   FileText,
   Tag,
@@ -61,22 +60,10 @@ export function ContentDetailDialog({
               Content Details
             </DialogTitle>
             <div className="flex items-center gap-2">
-              <Badge
-                variant="outline"
-                style={{
-                  borderColor: getPlatformColor(content.platform),
-                  color: getPlatformColor(content.platform),
-                }}
-              >
+              <Badge variant={CONTENT_PLATFORM_BADGE_OUTLINE_VARIANTS[content.platform]}>
                 {getPlatformLabel(content.platform)}
               </Badge>
-              <Badge
-                variant="secondary"
-                style={{
-                  backgroundColor: `${getStatusColor(content.status)}20`,
-                  color: getStatusColor(content.status),
-                }}
-              >
+              <Badge variant={CONTENT_STATUS_BADGE_OUTLINE_VARIANTS[content.status]}>
                 {getStatusLabel(content.status)}
               </Badge>
             </div>
@@ -271,9 +258,9 @@ export function ContentDetailDialog({
                     onOpenChange(false);
                   }}
                 >
-                  <div
-                    className="w-2 h-2 rounded-full mr-2"
-                    style={{ backgroundColor: getStatusColor(status) }}
+                  <Badge
+                    variant={CONTENT_STATUS_BADGE_OUTLINE_VARIANTS[status]}
+                    className="w-2 h-2 p-0 mr-2 rounded-full"
                   />
                   {getStatusLabel(status)}
                 </Button>

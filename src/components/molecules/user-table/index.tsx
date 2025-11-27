@@ -27,6 +27,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  ROLE_BADGE_OUTLINE_VARIANTS,
+  USER_STATUS_BADGE_VARIANTS,
+} from "@/constants/badge-variants";
 
 interface UsersTableProps {
   users: User[];
@@ -35,12 +39,6 @@ interface UsersTableProps {
   onEdit?: (user: User) => void;
   onDelete?: (user: User) => void;
 }
-
-const statusColors = {
-  active: "success",
-  inactive: "secondary",
-  pending: "warning",
-} as const;
 
 export function UsersTable({
   users,
@@ -72,6 +70,11 @@ export function UsersTable({
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getRoleBadgeVariant = (roleName: string) => {
+    const normalizedRole = roleName.toLowerCase();
+    return ROLE_BADGE_OUTLINE_VARIANTS[normalizedRole] || "outline";
   };
 
   return (
@@ -111,19 +114,13 @@ export function UsersTable({
                 {user.email}
               </TableCell>
               <TableCell>
-                <Badge
-                  variant="outline"
-                  style={{
-                    borderColor: user.role.color,
-                    color: user.role.color,
-                  }}
-                >
+                <Badge variant={getRoleBadgeVariant(user.role.name)}>
                   {user.role.name}
                 </Badge>
               </TableCell>
               <TableCell>{user.team?.name || "-"}</TableCell>
               <TableCell>
-                <Badge variant={statusColors[user.status] || "secondary"}>
+                <Badge variant={USER_STATUS_BADGE_VARIANTS[user.status] || "secondary"}>
                   {user.status}
                 </Badge>
               </TableCell>

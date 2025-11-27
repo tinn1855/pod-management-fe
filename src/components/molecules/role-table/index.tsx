@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ROLE_BADGE_OUTLINE_VARIANTS } from "@/constants/badge-variants";
 
 interface RolesTableProps {
   roles: Role[];
@@ -56,6 +57,11 @@ export function RolesTable({
     setViewingRole(role);
   };
 
+  const getRoleBadgeVariant = (roleName: string) => {
+    const normalizedRole = roleName.toLowerCase();
+    return ROLE_BADGE_OUTLINE_VARIANTS[normalizedRole] || "outline";
+  };
+
   return (
     <>
       <Table>
@@ -80,21 +86,13 @@ export function RolesTable({
               <TableCell>{index + 1}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <div
-                    className="h-9 w-9 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: `${role.color}20` }}
+                  <Badge
+                    variant={getRoleBadgeVariant(role.name)}
+                    className="h-9 w-9 rounded-full p-0 flex items-center justify-center"
                   >
-                    <Shield className="h-4 w-4" style={{ color: role.color }} />
-                  </div>
-                  <div>
-                    <span className="font-medium">{role.name}</span>
-                    {role.color && (
-                      <div
-                        className="w-3 h-3 rounded-full inline-block ml-2"
-                        style={{ backgroundColor: role.color }}
-                      />
-                    )}
-                  </div>
+                    <Shield className="h-4 w-4" />
+                  </Badge>
+                  <span className="font-medium">{role.name}</span>
                 </div>
               </TableCell>
               <TableCell className="text-muted-foreground max-w-[200px] truncate">

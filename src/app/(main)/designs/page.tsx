@@ -16,14 +16,7 @@ import { PenTool, Search, Upload, Folder } from "lucide-react";
 import { useState } from "react";
 import { mockDesigns } from "@/data/idea";
 import { toast } from "sonner";
-
-const statusColors: Record<string, string> = {
-  draft: "#6b7280",
-  pending_review: "#f59e0b",
-  approved: "#22c55e",
-  rejected: "#ef4444",
-  revision: "#3b82f6",
-};
+import { DESIGN_STATUS_BADGE_VARIANTS } from "@/constants/badge-variants";
 
 const statusLabels: Record<string, string> = {
   draft: "Draft",
@@ -38,13 +31,21 @@ export default function DesignsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const filteredDesigns = mockDesigns.filter((design) => {
-    const matchesSearch = design.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || design.status === statusFilter;
+    const matchesSearch = design.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || design.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const getInitials = (name: string) =>
-    name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
 
   const handleUpload = () => {
     toast.info("Upload design feature coming soon");
@@ -104,7 +105,10 @@ export default function DesignsPage() {
       {/* Designs Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredDesigns.map((design) => (
-          <Card key={design.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+          <Card
+            key={design.id}
+            className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+          >
             <div className="aspect-video bg-muted relative">
               {design.files.length > 0 && design.files[0].type === "png" ? (
                 <img
@@ -119,10 +123,7 @@ export default function DesignsPage() {
               )}
               <Badge
                 className="absolute top-2 right-2"
-                style={{
-                  backgroundColor: statusColors[design.status],
-                  color: "white",
-                }}
+                variant={DESIGN_STATUS_BADGE_VARIANTS[design.status]}
               >
                 {statusLabels[design.status]}
               </Badge>

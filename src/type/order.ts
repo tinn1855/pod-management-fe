@@ -1,5 +1,5 @@
 import { User } from "./user";
-import { Design } from "./idea";
+import { Store, PlatformType } from "./platform";
 
 export type OrderStatus =
   | "pending"        // Đơn hàng mới
@@ -10,7 +10,8 @@ export type OrderStatus =
   | "delivered"      // Đã giao hàng
   | "cancelled";     // Đã hủy
 
-export type OrderSource = "etsy" | "amazon" | "manual" | "shopify" | "other";
+// Keep for backward compatibility
+export type OrderSource = PlatformType;
 
 export interface OrderItem {
   id: string;
@@ -37,7 +38,8 @@ export interface CustomerInfo {
 export interface Order {
   id: string;
   orderNumber: string;
-  source: OrderSource;
+  platform: PlatformType;  // Platform type (etsy, amazon, etc.)
+  store?: Store;           // Store the order came from
   externalOrderId?: string; // ID từ Etsy/Amazon
   status: OrderStatus;
   customer: CustomerInfo;
@@ -61,9 +63,10 @@ export interface Order {
 // Order filters
 export interface OrderFilters {
   status?: OrderStatus;
-  source?: OrderSource;
+  platform?: PlatformType;
+  storeId?: string;
+  accountId?: string;
   dateFrom?: string;
   dateTo?: string;
   search?: string;
 }
-
