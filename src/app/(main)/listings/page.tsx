@@ -34,6 +34,7 @@ import {
   PLATFORM_BADGE_OUTLINE_VARIANTS,
   LISTING_STATUS_BADGE_OUTLINE_VARIANTS,
 } from "@/constants/badge-variants";
+import { formatCurrency, formatNumber } from "@/constants";
 import { PlatformType } from "@/type/platform";
 
 // Mock listings data
@@ -144,7 +145,7 @@ export default function ListingsPage() {
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalViews.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatNumber(totalViews)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -162,7 +163,7 @@ export default function ListingsPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
           </CardContent>
         </Card>
       </div>
@@ -240,13 +241,13 @@ export default function ListingsPage() {
                     {listing.status}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right">${listing.price}</TableCell>
+                <TableCell className="text-right">{formatCurrency(listing.price)}</TableCell>
                 <TableCell className="text-right">
-                  {listing.views.toLocaleString()}
+                  {formatNumber(listing.views)}
                 </TableCell>
-                <TableCell className="text-right">{listing.sales}</TableCell>
+                <TableCell className="text-right">{formatNumber(listing.sales)}</TableCell>
                 <TableCell className="text-right font-medium">
-                  ${listing.revenue.toFixed(2)}
+                  {formatCurrency(listing.revenue)}
                 </TableCell>
               </TableRow>
             ))}

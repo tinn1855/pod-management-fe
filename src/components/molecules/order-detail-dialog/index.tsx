@@ -15,6 +15,7 @@ import {
   PLATFORM_BADGE_OUTLINE_VARIANTS,
   ORDER_STATUS_BADGE_OUTLINE_VARIANTS,
 } from "@/constants/badge-variants";
+import { formatCurrency } from "@/constants";
 import {
   Package,
   Truck,
@@ -64,13 +65,6 @@ export function OrderDetailDialog({
     });
   };
 
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency,
-    }).format(amount);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
@@ -105,7 +99,9 @@ export function OrderDetailDialog({
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Created At</p>
-              <p className="font-medium">{formatDate(order.createdAt)}</p>
+              <p className="font-medium" suppressHydrationWarning>
+                {formatDate(order.createdAt)}
+              </p>
             </div>
           </div>
 
@@ -179,9 +175,7 @@ export function OrderDetailDialog({
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">
-                      {formatCurrency(item.price, order.currency)}
-                    </p>
+                    <p className="font-medium">{formatCurrency(item.price)}</p>
                     <p className="text-xs text-muted-foreground">
                       x{item.quantity}
                     </p>
@@ -226,12 +220,18 @@ export function OrderDetailDialog({
                 <div className="bg-muted/50 rounded-lg p-4">
                   <p className="font-mono">{order.trackingNumber}</p>
                   {order.shippedAt && (
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p
+                      className="text-sm text-muted-foreground mt-1"
+                      suppressHydrationWarning
+                    >
                       Shipped: {formatDate(order.shippedAt)}
                     </p>
                   )}
                   {order.deliveredAt && (
-                    <p className="text-sm text-green-600 mt-1">
+                    <p
+                      className="text-sm text-green-600 mt-1"
+                      suppressHydrationWarning
+                    >
                       Delivered: {formatDate(order.deliveredAt)}
                     </p>
                   )}
@@ -259,20 +259,20 @@ export function OrderDetailDialog({
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Subtotal</span>
-              <span>{formatCurrency(order.subtotal, order.currency)}</span>
+              <span>{formatCurrency(order.subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Shipping</span>
-              <span>{formatCurrency(order.shippingCost, order.currency)}</span>
+              <span>{formatCurrency(order.shippingCost)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Tax</span>
-              <span>{formatCurrency(order.tax, order.currency)}</span>
+              <span>{formatCurrency(order.tax)}</span>
             </div>
             <Separator />
             <div className="flex justify-between font-semibold text-lg">
               <span>Total</span>
-              <span>{formatCurrency(order.total, order.currency)}</span>
+              <span>{formatCurrency(order.total)}</span>
             </div>
           </div>
 

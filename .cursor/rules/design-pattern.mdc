@@ -1,0 +1,136 @@
+{
+"projectName": "Next.js Atomic Design System",
+"description": "Hệ thống Frontend sử dụng Next.js, TypeScript, TailwindCSS và Shadcn UI. Code tuân thủ SOLID, KISS, DRY, kiến trúc Atomic Design, không dùng inline style, và viết đúng chuẩn TypeScript.",
+"rules": [
+{
+"title": "Core Principles",
+"description": "Tuân thủ SOLID, KISS và DRY trong toàn bộ codebase. Mỗi function, class hoặc component chỉ nên đảm nhiệm một nhiệm vụ duy nhất (Single Responsibility).",
+"examples": [
+{
+"bad": "Một function xử lý nhiều logic khác nhau (vi phạm SRP).",
+"good": "Tách logic thành các function nhỏ, mỗi function chỉ đảm nhận một nhiệm vụ."
+},
+{
+"bad": "Lặp lại logic hoặc component giống nhau ở nhiều nơi.",
+"good": "Tạo helper hoặc custom hook để tái sử dụng (DRY)."
+},
+{
+"bad": "Viết code phức tạp với nhiều điều kiện lồng nhau.",
+"good": "Giữ code đơn giản, dễ hiểu (KISS)."
+}
+]
+},
+{
+"title": "Architecture",
+"description": "Áp dụng mô hình Atomic Design: Atoms → Molecules → Organisms → Templates → Pages. Mỗi component được đặt đúng cấp độ và có phạm vi trách nhiệm rõ ràng.",
+"examples": [
+{
+"bad": "src/components/Button.tsx chứa logic gọi API.",
+"good": "src/components/atoms/Button.tsx chỉ xử lý UI. Logic API nằm ở hook hoặc service riêng."
+},
+{
+"bad": "src/app/dashboard/page.tsx trực tiếp render Input, Button.",
+"good": "page.tsx chỉ render các Organism hoặc Template component."
+}
+]
+},
+{
+"title": "Tech Stack Enforcement",
+"description": "Chỉ sử dụng Next.js, TypeScript, TailwindCSS và Shadcn UI. Không dùng thư viện UI khác (Material UI, Bootstrap...).",
+"examples": [
+{
+"bad": "Dùng Material UI hoặc CSS modules.",
+"good": "Dùng shadcn/ui và TailwindCSS utility class."
+},
+{
+"bad": "Viết file .js hoặc .jsx.",
+"good": "Chỉ sử dụng .ts hoặc .tsx với type rõ ràng."
+}
+]
+},
+{
+"title": "UI Components Mapping",
+"description": "Tất cả các component UI nguyên thủy (Button, Input, Label, Card, Badge, Dialog, v.v.) nằm trong `src/components/atoms/` và được import từ shadcn/ui.",
+"examples": [
+{
+"good": "src/components/atoms/Button.tsx → export { Button } from '@/components/ui/button';"
+}
+]
+},
+{
+"title": "Styling Rules",
+"description": "Toàn bộ styling sử dụng TailwindCSS hoặc className utility (`cn()` từ shadcn/ui). Không dùng inline style hoặc file CSS riêng trừ trường hợp đặc biệt.",
+"examples": [
+{
+"bad": "<div style={{ color: 'red' }}>Error</div>",
+"good": "<div className='text-red-500'>Error</div>"
+},
+{
+"bad": "<Button style={{ marginTop: 10 }}>Click</Button>",
+"good": "<Button className='mt-2'>Click</Button>"
+},
+{
+"bad": "import './style.css';",
+"good": "Dùng class Tailwind hoặc variant từ shadcn/ui."
+}
+]
+},
+{
+"title": "Component Architecture",
+"description": "Component phải rõ ràng về vai trò, có thể tái sử dụng, và tách biệt logic với UI.",
+"examples": [
+{
+"bad": "Kết hợp UI + business logic trong một component.",
+"good": "Tách UI thành component và logic sang hook (useXyz)."
+},
+{
+"bad": "Import trực tiếp từ đường dẫn sâu (./ui/button/button.tsx).",
+"good": "Dùng alias '@' và index.ts trong module."
+}
+]
+},
+{
+"title": "Code Style",
+"description": "Tuân thủ chuẩn TypeScript và Next.js. Sử dụng functional component, định nghĩa type rõ ràng, và import gọn gàng.",
+"examples": [
+{
+"bad": "function card(props) { return <div>{props.title}</div>; }",
+"good": "const Card: React.FC<{ title: string }> = ({ title }) => <div>{title}</div>;"
+},
+{
+"bad": "const handle = (data) => {}; // dùng any implicit",
+"good": "const handle = (data: UserType): void => {}; // có type rõ ràng"
+}
+]
+},
+{
+"title": "Folder Structure",
+"description": "Tuân thủ cấu trúc Atomic Design chuẩn:",
+"examples": [
+{
+"good": "src/\n components/\n atoms/\n molecules/\n organisms/\n templates/\n app/\n hooks/\n lib/\n types/\n utils/"
+}
+]
+},
+{
+"title": "Imports Order",
+"description": "Import theo thứ tự: React → Next → Third-party → Aliases → Relative.",
+"examples": [
+{
+"good": "import React from 'react';\nimport { useRouter } from 'next/navigation';\nimport { Button } from '@/components/atoms/Button';\nimport { useToast } from '@/hooks/useToast';\nimport { MyHook } from './useMyHook';"
+}
+]
+},
+{
+"title": "Error Handling",
+"description": "Tất cả async function phải được bao trong try/catch. Khi có lỗi, hiển thị thông báo bằng Toast hoặc Dialog từ shadcn/ui.",
+"examples": [
+{
+"bad": "await api.get('/user'); // không try-catch",
+"good": "try { await api.get('/user'); } catch (error) { toast.error('Lỗi khi tải dữ liệu'); }"
+}
+]
+}
+],
+"design": "./design.md"
+}

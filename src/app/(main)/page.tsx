@@ -11,29 +11,30 @@ import {
   Users,
   TrendingUp,
 } from "lucide-react";
+import { formatCurrency, formatNumber } from "@/constants";
 
 const stats = [
   {
     title: "Total Orders",
-    value: "1,234",
+    value: formatNumber(1234),
     description: "+12% from last month",
     icon: ShoppingCart,
   },
   {
     title: "Products",
-    value: "456",
+    value: formatNumber(456),
     description: "+5 new this week",
     icon: Package,
   },
   {
     title: "Active Users",
-    value: "89",
+    value: formatNumber(89),
     description: "+3 new users",
     icon: Users,
   },
   {
     title: "Revenue",
-    value: "$12,345",
+    value: formatCurrency(12345),
     description: "+18% from last month",
     icon: TrendingUp,
   },

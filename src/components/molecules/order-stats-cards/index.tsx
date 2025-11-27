@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LucideIcon, Package, ShoppingCart, Truck, DollarSign } from "lucide-react";
 import { getOrderStats } from "@/data/order";
+import { formatCurrency, formatNumber } from "@/constants";
 
 interface StatCardProps {
   title: string;
@@ -34,26 +35,26 @@ export function OrderStatsCards({ stats }: OrderStatsCardsProps) {
   const cards: StatCardProps[] = [
     {
       title: "Total Orders",
-      value: stats.total,
-      description: `${stats.pending} pending`,
+      value: formatNumber(stats.total),
+      description: `${formatNumber(stats.pending)} pending`,
       icon: ShoppingCart,
     },
     {
       title: "Processing",
-      value: stats.processing + stats.designing + stats.production,
-      description: `${stats.designing} in design`,
+      value: formatNumber(stats.processing + stats.designing + stats.production),
+      description: `${formatNumber(stats.designing)} in design`,
       icon: Package,
     },
     {
       title: "Shipped",
-      value: stats.shipped + stats.delivered,
-      description: `${stats.delivered} delivered`,
+      value: formatNumber(stats.shipped + stats.delivered),
+      description: `${formatNumber(stats.delivered)} delivered`,
       icon: Truck,
     },
     {
       title: "Revenue",
-      value: `$${stats.totalRevenue.toFixed(2)}`,
-      description: `From ${stats.total - stats.cancelled} successful orders`,
+      value: formatCurrency(stats.totalRevenue),
+      description: `From ${formatNumber(stats.total - stats.cancelled)} successful orders`,
       icon: DollarSign,
     },
   ];

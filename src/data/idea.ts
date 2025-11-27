@@ -6,7 +6,8 @@ export const mockIdeas: Idea[] = [
   {
     id: "idea-1",
     title: "T-Shirt Design - Summer Collection",
-    description: "Thiết kế áo thun theo chủ đề mùa hè với các họa tiết tropical",
+    description:
+      "Thiết kế áo thun theo chủ đề mùa hè với các họa tiết tropical",
     status: "new",
     priority: "high",
     references: [
@@ -70,7 +71,8 @@ export const mockIdeas: Idea[] = [
   {
     id: "idea-4",
     title: "Poster - Motivational Quotes",
-    description: "Poster với các câu nói truyền cảm hứng, phong cách typography",
+    description:
+      "Poster với các câu nói truyền cảm hứng, phong cách typography",
     status: "done_idea",
     priority: "medium",
     references: [
@@ -331,17 +333,17 @@ export const getStatusLabel = (status: IdeaStatus): string => {
 };
 
 // Helper function to get status color
-export const getStatusColor = (status: IdeaStatus): string => {
-  const colors: Record<IdeaStatus, string> = {
-    new: "#3b82f6",
-    check_design: "#f59e0b",
-    check_content: "#8b5cf6",
-    done_idea: "#10b981",
-    fix_design: "#ef4444",
-    done: "#22c55e",
-  };
-  return colors[status];
-};
+// export const getStatusColor = (status: IdeaStatus): string => {
+//   const colors: Record<IdeaStatus, string> = {
+//     new: "#3b82f6",
+//     check_design: "#f59e0b",
+//     check_content: "#8b5cf6",
+//     done_idea: "#10b981",
+//     fix_design: "#ef4444",
+//     done: "#22c55e",
+//   };
+//   return colors[status];
+// };
 
 // Priority colors
 export const getPriorityColor = (priority: Idea["priority"]): string => {
@@ -353,4 +355,3 @@ export const getPriorityColor = (priority: Idea["priority"]): string => {
   };
   return colors[priority];
 };
-

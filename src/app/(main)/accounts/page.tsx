@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useMemo, Suspense, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -40,15 +40,30 @@ import {
 } from "@/constants/badge-variants";
 
 export default function AccountsPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page") ?? 1);
-  const [activeTab, setActiveTab] = useState<"accounts" | "stores">("accounts");
+  const activeTab = (searchParams.get("tab") ?? "accounts") as "accounts" | "stores";
 
   const [accounts, setAccounts] = useState<Account[]>(mockAccounts);
   const [stores, setStores] = useState<Store[]>(mockStores);
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const setActiveTab = useCallback((tab: "accounts" | "stores") => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "accounts") {
+      params.delete("tab");
+    } else {
+      params.set("tab", tab);
+    }
+    // Reset page when switching tabs
+    params.delete("page");
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
+  }, [searchParams, pathname, router]);
 
   const stats = getAccountStats();
 

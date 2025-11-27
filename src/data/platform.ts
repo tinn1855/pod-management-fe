@@ -142,7 +142,7 @@ export const mockAccounts: Account[] = [
 ];
 
 // ============================================
-// STORES - Multiple stores per account (30 total)
+// STORES - One store per account (each account can only have 1 store)
 // ============================================
 
 const storeNames = [
@@ -207,13 +207,11 @@ function generateStore(index: number, account: Account): Store {
   );
 
   return {
-    id: `store-${account.platform.type}-${account.id.split("-").pop()}-${
-      index + 1
-    }`,
+    id: `store-${account.platform.type}-${account.id.split("-").pop()}`,
     name: `${storeName} - ${account.name.split(" (")[0]}`,
     storeUrl: `https://${account.platform.type}.com/shop/${storeName
       .toLowerCase()
-      .replace(/\s+/g, "-")}-${index + 1}`,
+      .replace(/\s+/g, "-")}-${account.id.split("-").pop()}`,
     account,
     status: statusOptions[index % statusOptions.length],
     currency: country.currency,
@@ -227,13 +225,10 @@ function generateStore(index: number, account: Account): Store {
   };
 }
 
-// Generate 2-3 stores per account
-export const mockStores: Store[] = mockAccounts.flatMap((account, accIndex) => {
-  const storeCount = (accIndex % 3) + 1; // 1-3 stores per account
-  return Array.from({ length: storeCount }, (_, i) =>
-    generateStore(accIndex * 3 + i, account)
-  );
-});
+// Generate exactly 1 store per account
+export const mockStores: Store[] = mockAccounts.map((account, index) =>
+  generateStore(index, account)
+);
 
 // ============================================
 // HELPER FUNCTIONS

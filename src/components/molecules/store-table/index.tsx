@@ -29,6 +29,7 @@ import {
   PLATFORM_BADGE_OUTLINE_VARIANTS,
   STORE_STATUS_BADGE_OUTLINE_VARIANTS,
 } from "@/constants/badge-variants";
+import { formatCurrency, formatNumber } from "@/constants";
 
 interface StoreTableProps {
   stores: Store[];
@@ -109,9 +110,9 @@ export function StoreTable({
                   </Badge>
                 </TableCell>
                 <TableCell>{store.country}</TableCell>
-                <TableCell className="text-right">{store.totalOrders}</TableCell>
+                <TableCell className="text-right">{formatNumber(store.totalOrders)}</TableCell>
                 <TableCell className="text-right font-medium">
-                  ${store.totalRevenue.toLocaleString()}
+                  {formatCurrency(store.totalRevenue)}
                 </TableCell>
                 <TableCell className="text-center">
                   {store.rating && (

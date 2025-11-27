@@ -77,7 +77,7 @@ export function OrdersTable({
         <TableHeader>
           <TableRow>
             <TableHead>Order ID</TableHead>
-            <TableHead>Platform / Store</TableHead>
+            <TableHead>Platform/Store</TableHead>
             <TableHead>Customer</TableHead>
             <TableHead>Products</TableHead>
             <TableHead>Status</TableHead>

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Product } from "@/type/product";
 import Image from "next/image";
+import { formatCurrency } from "@/constants";
 
 interface ProductDetailDialogProps {
   product: Product | null;
@@ -79,7 +80,7 @@ export function ProductDetailDialog({
                     : "Discontinued"}
                 </Badge>
                 <span className="text-2xl font-bold text-green-600">
-                  ${product.price}
+                  {formatCurrency(product.price)}
                 </span>
               </div>
 

@@ -15,6 +15,7 @@ import {
   CONTENT_STATUS_BADGE_OUTLINE_VARIANTS,
   CONTENT_PLATFORM_BADGE_OUTLINE_VARIANTS,
 } from "@/constants/badge-variants";
+import { formatCurrency } from "@/constants";
 import {
   FileText,
   Tag,
@@ -185,7 +186,7 @@ export function ContentDetailDialog({
                 <div>
                   <p className="text-xs text-muted-foreground">Price Range</p>
                   <p className="font-medium">
-                    ${content.metadata.priceRange.min} - ${content.metadata.priceRange.max}
+                    {formatCurrency(content.metadata.priceRange.min)} - {formatCurrency(content.metadata.priceRange.max)}
                   </p>
                 </div>
               )}

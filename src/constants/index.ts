@@ -23,6 +23,29 @@ export const DEFAULT_CURRENCY = "USD";
 
 export const CURRENCY_LOCALE = "en-US";
 
+/**
+ * Format a number as USD currency: $1,234,567.89
+ * @param amount - The number to format
+ * @returns Formatted currency string
+ */
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat(CURRENCY_LOCALE, {
+    style: "currency",
+    currency: DEFAULT_CURRENCY,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
+
+/**
+ * Format a number with thousand separators: 1,234,567
+ * @param value - The number to format
+ * @returns Formatted number string
+ */
+export const formatNumber = (value: number): string => {
+  return new Intl.NumberFormat(CURRENCY_LOCALE).format(value);
+};
+
 // ============================================
 // STATUS COLORS (Tailwind classes)
 // ============================================
