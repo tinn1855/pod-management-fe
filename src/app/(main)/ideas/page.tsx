@@ -16,28 +16,60 @@ import { Idea, IdeaStatus } from "@/type/idea";
 import { IdeaKanbanBoard } from "@/components/molecules/idea-kanban-board";
 import { IdeaListView } from "@/components/molecules/idea-list-view";
 import { CreateIdeaDialog } from "@/components/molecules/idea-create-dialog";
+import { IdeaDetailDialog } from "@/components/molecules/idea-detail-dialog";
 import { mockUsers } from "@/data/user";
 import { toast } from "sonner";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+
+type ViewMode = "kanban" | "list";
 
 export default function IdeasPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Get view mode from URL params
+  const viewMode = (searchParams.get("view") as ViewMode) || "kanban";
+
   const [ideas, setIdeas] = useState<Idea[]>(mockIdeas);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
+  const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+
+  // Handle view mode change
+  const setViewMode = (mode: ViewMode) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (mode === "kanban") {
+      params.delete("view");
+      params.delete("page"); // Reset page when switching to kanban
+    } else {
+      params.set("view", mode);
+      params.delete("page"); // Reset page when switching views
+    }
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
+  };
 
   // Filter ideas
   const filteredIdeas = ideas.filter((idea) => {
     const matchesSearch =
       idea.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       idea.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      idea.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesStatus = statusFilter === "all" || idea.status === statusFilter;
-    const matchesPriority = priorityFilter === "all" || idea.priority === priorityFilter;
+      idea.tags.some((tag) =>
+        tag.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    const matchesStatus =
+      statusFilter === "all" || idea.status === statusFilter;
+    const matchesPriority =
+      priorityFilter === "all" || idea.priority === priorityFilter;
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const handleCreateIdea = (newIdea: Omit<Idea, "id" | "createdAt" | "updatedAt" | "comments">) => {
+  const handleCreateIdea = (
+    newIdea: Omit<Idea, "id" | "createdAt" | "updatedAt" | "comments">
+  ) => {
     const idea: Idea = {
       ...newIdea,
       id: `idea-${Date.now()}`,
@@ -53,7 +85,11 @@ export default function IdeasPage() {
     setIdeas((prev) =>
       prev.map((idea) =>
         idea.id === ideaId
-          ? { ...idea, status: newStatus, updatedAt: new Date().toISOString().split("T")[0] }
+          ? {
+              ...idea,
+              status: newStatus,
+              updatedAt: new Date().toISOString().split("T")[0],
+            }
           : idea
       )
     );
@@ -63,6 +99,18 @@ export default function IdeasPage() {
   const handleDeleteIdea = (ideaId: string) => {
     setIdeas((prev) => prev.filter((idea) => idea.id !== ideaId));
     toast.success("Idea deleted successfully");
+  };
+
+  const handleOpenDetail = (idea: Idea) => {
+    setSelectedIdea(idea);
+    setDetailDialogOpen(true);
+  };
+
+  const handleUpdateIdea = (updatedIdea: Idea) => {
+    setIdeas((prev) =>
+      prev.map((idea) => (idea.id === updatedIdea.id ? updatedIdea : idea))
+    );
+    setSelectedIdea(updatedIdea);
   };
 
   // Get designers for assignment
@@ -143,8 +191,16 @@ export default function IdeasPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {[
           { status: "new", label: "New", color: "bg-blue-500" },
-          { status: "check_design", label: "Check Design", color: "bg-amber-500" },
-          { status: "check_content", label: "Check Content", color: "bg-violet-500" },
+          {
+            status: "check_design",
+            label: "Check Design",
+            color: "bg-amber-500",
+          },
+          {
+            status: "check_content",
+            label: "Check Content",
+            color: "bg-violet-500",
+          },
           { status: "done_idea", label: "Done Idea", color: "bg-emerald-500" },
           { status: "fix_design", label: "Fix Design", color: "bg-red-500" },
           { status: "done", label: "DONE", color: "bg-green-500" },
@@ -166,18 +222,33 @@ export default function IdeasPage() {
 
       {/* Content */}
       {viewMode === "kanban" ? (
-        <IdeaKanbanBoard
-          ideas={filteredIdeas}
-          onUpdateStatus={handleUpdateIdeaStatus}
-          onDelete={handleDeleteIdea}
-        />
+        <div className="h-[calc(100vh-380px)] min-h-[400px]">
+          <IdeaKanbanBoard
+            ideas={filteredIdeas}
+            onUpdateStatus={handleUpdateIdeaStatus}
+            onDelete={handleDeleteIdea}
+            onOpenDetail={handleOpenDetail}
+          />
+        </div>
       ) : (
         <IdeaListView
           ideas={filteredIdeas}
           onUpdateStatus={handleUpdateIdeaStatus}
           onDelete={handleDeleteIdea}
+          onOpenDetail={handleOpenDetail}
         />
       )}
+
+      {/* Detail Dialog */}
+      <IdeaDetailDialog
+        idea={selectedIdea}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        users={mockUsers}
+        onUpdate={handleUpdateIdea}
+        onDelete={handleDeleteIdea}
+        onUpdateStatus={handleUpdateIdeaStatus}
+      />
     </div>
   );
 }

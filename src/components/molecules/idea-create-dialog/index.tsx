@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, X, Upload } from "lucide-react";
+import { CalendarIcon, Plus, X, Upload } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Idea, IdeaReference } from "@/type/idea";
@@ -37,6 +37,14 @@ import { User } from "@/type/user";
 import { mockUsers } from "@/data/user";
 import { toast } from "sonner";
 import { ideaFormSchema, IdeaFormValues } from "@/schema/idea.schema";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface CreateIdeaDialogProps {
   designers: User[];
@@ -55,6 +63,7 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
       priority: "medium",
       assigneeId: undefined,
       tags: "",
+      deadline: "",
     },
   });
 
@@ -76,6 +85,7 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
       assignee,
       createdBy,
       tags,
+      deadline: values.deadline || undefined,
     });
 
     form.reset();
@@ -206,7 +216,7 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
                             <div className="flex items-center gap-2">
                               <Avatar className="h-5 w-5">
                                 <AvatarImage src={designer.avatar} />
-                                <AvatarFallback className="text-[10px]">
+                                <AvatarFallback className="text-xs">
                                   {getInitials(designer.name)}
                                 </AvatarFallback>
                               </Avatar>
@@ -222,19 +232,67 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags (comma separated) *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="E.g: summer, tropical, t-shirt" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="deadline"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="flex items-center gap-1">
+                      <CalendarIcon className="h-3 w-3" />
+                      Deadline
+                    </FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(new Date(field.value), "dd/MM/yyyy")
+                            ) : (
+                              <span>Chọn deadline</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? new Date(field.value) : undefined}
+                          onSelect={(date) => field.onChange(date?.toISOString() || "")}
+                          initialFocus
+                          showOutsideDays={true}
+                          fixedWeeks={true}
+                          disabled={{ before: new Date() }}
+                          fromDate={new Date()}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tags (comma separated) *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="E.g: summer, tropical, t-shirt" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* References */}
             <div>
@@ -265,7 +323,7 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
                   className="w-20 h-20 border-2 border-dashed rounded-md flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors"
                 >
                   <Upload className="h-5 w-5" />
-                  <span className="text-[10px] mt-1">Add</span>
+                  <span className="text-xs mt-1">Add</span>
                 </button>
               </div>
             </div>
