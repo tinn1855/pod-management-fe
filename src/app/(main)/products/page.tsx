@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -9,26 +8,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-import { Plus } from "lucide-react";
 import { AppPagination } from "@/components/molecules/pagination";
 import { ProductsTable } from "@/components/molecules/product-table";
 import { mockProducts } from "@/data/product";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { CreateProductDialog } from "@/components/molecules/product-create-dialog";
 import { Product } from "@/type/product";
+import { ITEMS_PER_PAGE } from "@/constants";
+
+// Get unique categories from products
+const categories = [...new Set(mockProducts.map((p) => p.category))];
 
 export default function Products() {
+  const searchParams = useSearchParams();
+  const currentPage = Number(searchParams.get("page") ?? 1);
+
   const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchesSearch =
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.sku.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory =
+        categoryFilter === "all" || product.category === categoryFilter;
+      const matchesStatus =
+        statusFilter === "all" || product.status === statusFilter;
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+  }, [products, searchQuery, categoryFilter, statusFilter]);
 
-  const paginatedProducts = products.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage
-  );
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
+  const paginatedProducts = useMemo(() => {
+    return filteredProducts.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE
+    );
+  }, [filteredProducts, currentPage]);
 
   const handleEdit = (updatedProduct: Product) => {
     setProducts((prev) =>
@@ -43,49 +64,55 @@ export default function Products() {
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-bold mb-4">Products Manager</h1>
-      <div className="flex gap-2">
-        <Input placeholder="Search products..." />
-        <div>
-          <Select>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Sort By Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="light">Light</SelectItem>
-              <SelectItem value="dark">Dark</SelectItem>
-              <SelectItem value="system">System</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Select>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="in-stock">In Stock</SelectItem>
-              <SelectItem value="out-of-stock">Out of Stock</SelectItem>
-              <SelectItem value="discontinued">Discontinued</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          {/* <Button className="ml-2">
-            <Plus />
-            New
-          </Button> */}
-          <CreateProductDialog />
-        </div>
+      <div className="flex gap-2 flex-wrap">
+        <Input
+          placeholder="Search products..."
+          className="max-w-sm"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category} value={category}>
+                {category}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="in stock">In Stock</SelectItem>
+            <SelectItem value="out of stock">Out of Stock</SelectItem>
+            <SelectItem value="discontinued">Discontinued</SelectItem>
+          </SelectContent>
+        </Select>
+        <CreateProductDialog />
       </div>
-      {/* Product Table */}
+
+      <div className="text-sm text-muted-foreground">
+        Showing {paginatedProducts.length} of {filteredProducts.length} products
+      </div>
+
       <ProductsTable
         products={paginatedProducts}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
-      <Suspense fallback={<div>Loading...</div>}>
-        <AppPagination totalPages={totalPages} />
-      </Suspense>
+
+      {totalPages > 1 && (
+        <Suspense fallback={<div>Loading...</div>}>
+          <AppPagination totalPages={totalPages} />
+        </Suspense>
+      )}
     </section>
   );
 }

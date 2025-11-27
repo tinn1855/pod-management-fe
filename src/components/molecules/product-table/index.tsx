@@ -15,6 +15,7 @@ import { EditProductDialog } from "../product-edit-dialog";
 import { DeleteConfirmDialog } from "../product-delete-confirm-dialog";
 import { ProductDetailDialog } from "../product-detail-dialog";
 import { useState } from "react";
+import { formatCurrency } from "@/constants";
 
 interface ProductsTableProps {
   products: Product[];
@@ -93,7 +94,7 @@ export function ProductsTable({
               <TableCell>{product.category}</TableCell>
               <TableCell>{product.sizes.length} sizes</TableCell>
               <TableCell>{product.colors.length} colors</TableCell>
-              <TableCell>${product.price}</TableCell>
+              <TableCell>{formatCurrency(product.price)}</TableCell>
               <TableCell>
                 <Badge
                   variant={
