@@ -57,23 +57,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full max-w-sm">
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Sign In</CardTitle>
-          <CardDescription>
+    <div className="w-full max-w-md">
+      <Card className="shadow-lg">
+        <CardHeader className="text-center space-y-2">
+          <CardTitle className="text-3xl font-bold">Sign In</CardTitle>
+          <CardDescription className="text-base">
             Enter your credentials to continue
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-8 pb-8">
           <Form {...form}>
-            <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+            <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-base">Email</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -91,7 +91,7 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="text-base">Password</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
@@ -104,7 +104,7 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button disabled={loading} className="w-full">
+              <Button disabled={loading} className="w-full ">
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
