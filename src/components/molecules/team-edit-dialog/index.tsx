@@ -31,17 +31,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Team, User } from "@/type/user";
-
-const teamFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  description: z.string().optional(),
-  leaderId: z.string().optional(),
-  memberIds: z.array(z.string()),
-});
-
-type TeamFormValues = z.infer<typeof teamFormSchema>;
+import { teamFormSchema, TeamFormValues } from "@/schema/team.schema";
 
 interface EditTeamDialogProps {
   team?: Team;

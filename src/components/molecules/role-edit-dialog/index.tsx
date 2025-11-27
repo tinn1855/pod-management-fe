@@ -24,19 +24,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Shield } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Role, Permission } from "@/type/user";
 import { COLOR_OPTIONS } from "@/constants";
 import { cn } from "@/lib/utils";
-
-const roleFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  description: z.string().optional(),
-  color: z.string().optional(),
-  permissionIds: z.array(z.string()),
-});
-
-type RoleFormValues = z.infer<typeof roleFormSchema>;
+import { roleFormSchema, RoleFormValues } from "@/schema/role.schema";
 
 interface EditRoleDialogProps {
   role?: Role;

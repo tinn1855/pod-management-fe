@@ -32,21 +32,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, X, Upload } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Idea, IdeaReference } from "@/type/idea";
 import { User } from "@/type/user";
 import { mockUsers } from "@/data/user";
 import { toast } from "sonner";
-
-const ideaFormSchema = z.object({
-  title: z.string().min(2, "Title must be at least 2 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  priority: z.enum(["low", "medium", "high", "urgent"]),
-  assigneeId: z.string().optional(),
-  tags: z.string().min(1, "Please enter at least one tag"),
-});
-
-type IdeaFormValues = z.infer<typeof ideaFormSchema>;
+import { ideaFormSchema, IdeaFormValues } from "@/schema/idea.schema";
 
 interface CreateIdeaDialogProps {
   designers: User[];

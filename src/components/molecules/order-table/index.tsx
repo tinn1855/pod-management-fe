@@ -176,7 +176,7 @@ export function OrdersTable({
                     onClick={(e) => e.stopPropagation()}
                   >
                     <DropdownMenuItem onClick={() => onViewDetail(order)}>
-                      <Eye className="h-4 w-4 mr-2" />
+                      <Eye className="h-4 w-4 " />
                       View Details
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -191,22 +191,22 @@ export function OrdersTable({
                             onClick={() => onUpdateStatus(order.id, status)}
                           >
                             {status === "processing" && (
-                              <Package className="h-4 w-4 mr-2" />
+                              <Package className="h-4 w-4 " />
                             )}
                             {status === "designing" && (
-                              <Upload className="h-4 w-4 mr-2" />
+                              <Upload className="h-4 w-4 " />
                             )}
                             {status === "production" && (
-                              <Package className="h-4 w-4 mr-2" />
+                              <Package className="h-4 w-4 " />
                             )}
                             {status === "shipped" && (
-                              <Truck className="h-4 w-4 mr-2" />
+                              <Truck className="h-4 w-4 " />
                             )}
                             {status === "delivered" && (
-                              <CheckCircle className="h-4 w-4 mr-2" />
+                              <CheckCircle className="h-4 w-4" />
                             )}
                             {status === "cancelled" && (
-                              <XCircle className="h-4 w-4 mr-2 text-destructive" />
+                              <XCircle className="h-4 w-4 text-destructive" />
                             )}
                             {getStatusLabel(status)}
                           </DropdownMenuItem>
