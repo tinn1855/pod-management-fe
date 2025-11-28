@@ -1,11 +1,14 @@
 "use client";
 
 import {
+  ChevronDown,
+  ChevronRight,
   ChevronUp,
   ClipboardList,
   Factory,
   FileImage,
   FileText,
+  FolderTree,
   History,
   Key,
   LayoutDashboard,
@@ -21,6 +24,7 @@ import {
   Users,
   UsersRound,
 } from "lucide-react";
+import { useState } from "react";
 
 import {
   Sidebar,
@@ -33,6 +37,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import {
@@ -44,7 +51,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/auth.context";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 // Sales menu (Seller)
 const salesMenuItems = [
@@ -59,11 +66,6 @@ const salesMenuItems = [
     icon: Store,
   },
   {
-    title: "Products",
-    url: "/products",
-    icon: Package,
-  },
-  {
     title: "Listings",
     url: "/listings",
     icon: FileText,
@@ -72,6 +74,20 @@ const salesMenuItems = [
     title: "Content",
     url: "/content",
     icon: FileImage,
+  },
+];
+
+// Products sub-menu items
+const productsSubItems = [
+  {
+    title: "Product Management",
+    url: "/products",
+    query: "?view=products",
+  },
+  {
+    title: "Category Management",
+    url: "/products",
+    query: "?view=categories",
   },
 ];
 
@@ -140,10 +156,28 @@ const adminMenuItems = [
 export function AppSidebar() {
   const { logout } = useAuth();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [expandedProducts, setExpandedProducts] = useState(true);
 
   const isActive = (url: string) => {
     if (url === "/") return pathname === "/";
     return pathname.startsWith(url);
+  };
+
+  const isProductPageActive = () => {
+    return pathname.startsWith("/products");
+  };
+
+  const isSubItemActive = (item: typeof productsSubItems[0]) => {
+    if (!isProductPageActive()) return false;
+    const view = searchParams.get("view");
+    if (item.query.includes("view=products")) {
+      return !view || view === "products";
+    }
+    if (item.query.includes("view=categories")) {
+      return view === "categories";
+    }
+    return false;
   };
 
   const renderMenuItems = (
@@ -195,7 +229,50 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Sales</SidebarGroupLabel>
           <SidebarGroupContent>
-            {renderMenuItems(salesMenuItems)}
+            <SidebarMenu>
+              {salesMenuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <Link href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+              
+              {/* Products - Expandable */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => setExpandedProducts(!expandedProducts)}
+                  isActive={isProductPageActive()}
+                >
+                  <Package />
+                  <span>Products</span>
+                  {expandedProducts ? (
+                    <ChevronDown className="ml-auto" />
+                  ) : (
+                    <ChevronRight className="ml-auto" />
+                  )}
+                </SidebarMenuButton>
+                {expandedProducts && (
+                  <SidebarMenuSub>
+                    {productsSubItems.map((item) => (
+                      <SidebarMenuSubItem key={item.title}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={isSubItemActive(item)}
+                        >
+                          <Link href={`${item.url}${item.query}`}>
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                )}
+              </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
