@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,15 +29,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarIcon, Plus, X, Upload } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { Idea, IdeaReference } from "@/type/idea";
+import { Idea, PRIORITY_ORDER } from "@/type/idea";
 import { User } from "@/type/user";
 import { mockUsers } from "@/data/user";
-import { toast } from "sonner";
-import { ideaFormSchema, IdeaFormValues } from "@/schema/idea.schema";
+import { IdeaFormValues } from "@/schema/idea.schema";
+import { getPriorityLabel, getInitials } from "@/utils/format";
+import { useIdeaForm } from "@/hooks/use-idea-form";
+import { useReferences } from "@/hooks/use-references";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -48,24 +49,21 @@ import { format } from "date-fns";
 
 interface CreateIdeaDialogProps {
   designers: User[];
-  onSubmit: (idea: Omit<Idea, "id" | "createdAt" | "updatedAt" | "comments">) => void;
+  onSubmit: (
+    idea: Omit<Idea, "id" | "createdAt" | "updatedAt" | "comments">
+  ) => void;
 }
 
-export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps) {
+export function CreateIdeaDialog({
+  designers,
+  onSubmit,
+}: CreateIdeaDialogProps) {
   const [open, setOpen] = useState(false);
-  const [references, setReferences] = useState<IdeaReference[]>([]);
+  const [deadlinePopoverOpen, setDeadlinePopoverOpen] = useState(false);
 
-  const form = useForm<IdeaFormValues>({
-    resolver: zodResolver(ideaFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      priority: "medium",
-      assigneeId: undefined,
-      tags: "",
-      deadline: "",
-    },
-  });
+  const { form, resetForm } = useIdeaForm();
+  const { references, addReference, removeReference, resetReferences } =
+    useReferences();
 
   const handleSubmit = (values: IdeaFormValues) => {
     const assignee = designers.find((d) => d.id === values.assigneeId);
@@ -88,47 +86,29 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
       deadline: values.deadline || undefined,
     });
 
-    form.reset();
-    setReferences([]);
+    resetForm();
+    resetReferences();
     setOpen(false);
-  };
-
-  const handleAddReference = () => {
-    toast.info("Reference upload feature coming soon", {
-      description: "You can paste image URLs for now",
-    });
-  };
-
-  const handleRemoveReference = (refId: string) => {
-    setReferences((prev) => prev.filter((r) => r.id !== refId));
   };
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
     if (!newOpen) {
-      form.reset();
-      setReferences([]);
+      resetForm();
+      resetReferences();
+      setDeadlinePopoverOpen(false);
     }
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus />
           Create Idea
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Create New Idea</DialogTitle>
           <DialogDescription>
@@ -136,7 +116,10 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="title"
@@ -144,7 +127,10 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
                 <FormItem>
                   <FormLabel>Title *</FormLabel>
                   <FormControl>
-                    <Input placeholder="E.g: T-Shirt Design - Summer Collection" {...field} />
+                    <Input
+                      placeholder="E.g: T-Shirt Design - Summer Collection"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -176,17 +162,21 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Priority</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select priority" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
+                        {PRIORITY_ORDER.map((priority) => (
+                          <SelectItem key={priority} value={priority}>
+                            {getPriorityLabel(priority)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -200,12 +190,14 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assign to Designer</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(value === "none" ? undefined : value)} 
+                    <Select
+                      onValueChange={(value) =>
+                        field.onChange(value === "none" ? undefined : value)
+                      }
                       defaultValue={field.value || "none"}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select designer" />
                         </SelectTrigger>
                       </FormControl>
@@ -239,10 +231,12 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel className="flex items-center gap-1">
-                      <CalendarIcon className="h-3 w-3" />
                       Deadline
                     </FormLabel>
-                    <Popover>
+                    <Popover
+                      open={deadlinePopoverOpen}
+                      onOpenChange={setDeadlinePopoverOpen}
+                    >
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -255,17 +249,25 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
                             {field.value ? (
                               format(new Date(field.value), "dd/MM/yyyy")
                             ) : (
-                              <span>Chọn deadline</span>
+                              <span>Select deadline</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon
+                              size={12}
+                              className="ml-auto opacity-50"
+                            />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent align="start">
                         <Calendar
                           mode="single"
-                          selected={field.value ? new Date(field.value) : undefined}
-                          onSelect={(date) => field.onChange(date?.toISOString() || "")}
+                          selected={
+                            field.value ? new Date(field.value) : undefined
+                          }
+                          onSelect={(date) => {
+                            field.onChange(date?.toISOString() || "");
+                            setDeadlinePopoverOpen(false);
+                          }}
                           initialFocus
                           showOutsideDays={true}
                           fixedWeeks={true}
@@ -286,7 +288,10 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
                   <FormItem>
                     <FormLabel>Tags (comma separated) *</FormLabel>
                     <FormControl>
-                      <Input placeholder="E.g: summer, tropical, t-shirt" {...field} />
+                      <Input
+                        placeholder="E.g: summer, tropical, t-shirt"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -301,35 +306,38 @@ export function CreateIdeaDialog({ designers, onSubmit }: CreateIdeaDialogProps)
                 {references.map((ref) => (
                   <div
                     key={ref.id}
-                    className="relative group w-20 h-20 rounded-md overflow-hidden border"
+                    className="relative group w-32 h-32 rounded-md overflow-hidden border"
                   >
-                    <img
+                    <Image
                       src={ref.url}
                       alt={ref.name}
-                      className="w-full h-full object-cover"
+                      className="object-cover"
+                      fill
                     />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveReference(ref.id)}
-                      className="absolute top-1 right-1 bg-destructive text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeReference(ref.id)}
+                      className="absolute top-1 right-1"
                     >
-                      <X className="h-3 w-3" />
-                    </button>
+                      <X size={12} />
+                    </Button>
                   </div>
                 ))}
-                <button
-                  type="button"
-                  onClick={handleAddReference}
-                  className="w-20 h-20 border-2 border-dashed rounded-md flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={addReference}
+                  className="w-32 h-32 border-2 border-dashed rounded-md flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors"
                 >
-                  <Upload className="h-5 w-5" />
+                  <Upload />
                   <span className="text-xs mt-1">Add</span>
-                </button>
+                </Button>
               </div>
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit">Create Idea</Button>
