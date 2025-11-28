@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 {
 "projectName": "Next.js Atomic Design System",
 "description": "Hệ thống Frontend sử dụng Next.js, TypeScript, TailwindCSS và Shadcn UI. Code tuân thủ SOLID, KISS, DRY, kiến trúc Atomic Design, không dùng inline style, và viết đúng chuẩn TypeScript.",
