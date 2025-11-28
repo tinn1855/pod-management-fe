@@ -20,23 +20,21 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, X, Upload } from "lucide-react";
+import { Plus, X, Upload, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Content, ContentMockup, Platform } from "@/type/content";
 import { Design } from "@/type/idea";
 import { User } from "@/type/user";
 import { mockUsers } from "@/data/user";
 import { toast } from "sonner";
 import { contentFormSchema, ContentFormValues } from "@/schema/content.schema";
+import { PLATFORM_OPTIONS } from "@/utils/platform";
+import { Combobox } from "@/components/ui/combobox";
 
 interface CreateContentDialogProps {
   designs: Design[];
@@ -57,7 +55,7 @@ export function CreateContentDialog({
     defaultValues: {
       title: "",
       description: "",
-      platform: "etsy",
+      platform: undefined,
       designId: undefined,
       tags: "",
       seoTitle: "",
@@ -66,6 +64,7 @@ export function CreateContentDialog({
       category: "",
       priceMin: "",
       priceMax: "",
+      autoPostEnabled: false,
     },
   });
 
@@ -78,7 +77,10 @@ export function CreateContentDialog({
       .filter((t) => t.length > 0);
 
     const keywords = values.keywords
-      ? values.keywords.split(",").map((k) => k.trim()).filter((k) => k.length > 0)
+      ? values.keywords
+          .split(",")
+          .map((k) => k.trim())
+          .filter((k) => k.length > 0)
       : undefined;
 
     onSubmit({
@@ -94,10 +96,18 @@ export function CreateContentDialog({
         seoDescription: values.seoDescription || undefined,
         keywords,
         category: values.category || undefined,
-        priceRange: values.priceMin && values.priceMax
-          ? { min: parseFloat(values.priceMin), max: parseFloat(values.priceMax) }
-          : undefined,
+        priceRange:
+          values.priceMin && values.priceMax
+            ? {
+                min: parseFloat(values.priceMin),
+                max: parseFloat(values.priceMax),
+              }
+            : undefined,
       },
+      autoPostEnabled: values.autoPostEnabled || false,
+      platforms: values.platforms
+        ? (values.platforms as Platform[])
+        : undefined,
       createdBy,
     });
 
@@ -128,7 +138,7 @@ export function CreateContentDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus />
           Create Content
         </Button>
       </DialogTrigger>
@@ -140,7 +150,10 @@ export function CreateContentDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="title"
@@ -148,7 +161,10 @@ export function CreateContentDialog({
                 <FormItem>
                   <FormLabel>Title *</FormLabel>
                   <FormControl>
-                    <Input placeholder="E.g: Summer T-Shirt - Tropical Design" {...field} />
+                    <Input
+                      placeholder="E.g: Summer T-Shirt - Tropical Design"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -180,21 +196,16 @@ export function CreateContentDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Platform *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select platform" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="etsy">Etsy</SelectItem>
-                        <SelectItem value="amazon">Amazon</SelectItem>
-                        <SelectItem value="shopify">Shopify</SelectItem>
-                        <SelectItem value="ebay">eBay</SelectItem>
-                        <SelectItem value="tiktok">TikTok Shop</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={PLATFORM_OPTIONS}
+                        value={field.value || ""}
+                        onValueChange={field.onChange}
+                        placeholder="Select platform"
+                        searchPlaceholder="Search platforms..."
+                        emptyMessage="No platform found."
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -206,24 +217,27 @@ export function CreateContentDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Link to Design</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(value === "none" ? undefined : value)} 
-                      defaultValue={field.value || "none"}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select design (optional)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">No design linked</SelectItem>
-                        {designs.map((design) => (
-                          <SelectItem key={design.id} value={design.id}>
-                            {design.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={[
+                          { value: "none", label: "No design linked" },
+                          ...designs.map((design) => ({
+                            value: design.id,
+                            label: design.title,
+                          })),
+                        ]}
+                        value={field.value || ""}
+                        onValueChange={(value) =>
+                          field.onChange(
+                            value === "none" || value === "" ? undefined : value
+                          )
+                        }
+                        placeholder="Select design (optional)"
+                        searchPlaceholder="Search designs..."
+                        emptyMessage="No design found."
+                        className="w-full"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -237,7 +251,10 @@ export function CreateContentDialog({
                 <FormItem>
                   <FormLabel>Tags (comma separated) *</FormLabel>
                   <FormControl>
-                    <Input placeholder="E.g: summer, tropical, beach, vacation" {...field} />
+                    <Input
+                      placeholder="E.g: summer, tropical, beach, vacation"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -253,10 +270,12 @@ export function CreateContentDialog({
                     key={mockup.id}
                     className="relative group w-20 h-20 rounded-md overflow-hidden border"
                   >
-                    <img
+                    <Image
                       src={mockup.url}
                       alt={mockup.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="80px"
                     />
                     <button
                       type="button"
@@ -289,7 +308,10 @@ export function CreateContentDialog({
                   <FormItem>
                     <FormLabel>SEO Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Title displayed on search engines" {...field} />
+                      <Input
+                        placeholder="Title displayed on search engines"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -321,7 +343,10 @@ export function CreateContentDialog({
                   <FormItem>
                     <FormLabel>Keywords (comma separated)</FormLabel>
                     <FormControl>
-                      <Input placeholder="E.g: summer tshirt, beach wear" {...field} />
+                      <Input
+                        placeholder="E.g: summer tshirt, beach wear"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -336,7 +361,10 @@ export function CreateContentDialog({
                     <FormItem>
                       <FormLabel>Category</FormLabel>
                       <FormControl>
-                        <Input placeholder="E.g: Clothing > T-Shirts" {...field} />
+                        <Input
+                          placeholder="E.g: Clothing > T-Shirts"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -374,8 +402,47 @@ export function CreateContentDialog({
               </div>
             </div>
 
+            {/* Auto-Post Settings */}
+            <div className="border rounded-lg p-4">
+              <FormField
+                control={form.control}
+                name="autoPostEnabled"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label
+                          htmlFor="auto-post"
+                          className="flex items-center gap-2"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          Enable Auto-Post via Extensions
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Automatically post content to platforms using browser
+                          extensions
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          id="auto-post"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit">Create Content</Button>

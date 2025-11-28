@@ -1,5 +1,9 @@
 import { Content, ContentStatus, Platform } from "@/type/content";
 import { mockUsers } from "./user";
+import { getPlatformLabel as getPlatformLabelUtil } from "@/utils/platform";
+
+// Re-export for backward compatibility
+export { getPlatformLabelUtil as getPlatformLabel };
 
 // ============================================
 // CONTENT DATA GENERATORS
@@ -220,17 +224,6 @@ export const getStatusLabel = (status: ContentStatus): string => {
   return labels[status];
 };
 
-export const getPlatformLabel = (platform: Platform): string => {
-  const labels: Record<Platform, string> = {
-    etsy: "Etsy",
-    amazon: "Amazon",
-    shopify: "Shopify",
-    ebay: "eBay",
-    tiktok: "TikTok Shop",
-    other: "Other",
-  };
-  return labels[platform];
-};
 
 // Get contents by status
 export const getContentsByStatus = (
