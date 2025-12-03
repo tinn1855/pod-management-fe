@@ -1,6 +1,5 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,54 +35,108 @@ interface UsersTableProps {
   users: User[];
   roles: Role[];
   teams: Team[];
-  onEdit?: (user: User) => void;
-  onDelete?: (user: User) => void;
+  rolesLoading?: boolean;
+  teamsLoading?: boolean;
+  onEditOpen?: () => void;
+  onEdit?: (
+    id: string,
+    userData: {
+      name?: string;
+      email?: string;
+      roleId?: string;
+      teamId?: string | null;
+      status?: "active" | "inactive" | "pending";
+    }
+  ) => Promise<void>;
+  onDelete?: (user: User) => Promise<void>;
+}
+
+function getRoleBadgeVariant(roleName: string) {
+  const normalizedRole = roleName.toLowerCase();
+  return ROLE_BADGE_OUTLINE_VARIANTS[normalizedRole] || "outline";
 }
 
 export function UsersTable({
   users,
   roles,
   teams,
+  rolesLoading = false,
+  teamsLoading = false,
+  onEditOpen,
   onEdit,
   onDelete,
 }: UsersTableProps) {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
 
-  const handleEdit = (user: User) => {
+  function handleEditClick(user: User): void {
     setEditingUser(user);
-  };
+    if (onEditOpen) {
+      onEditOpen();
+    }
+  }
 
-  const handleUpdate = (updatedUser: User) => {
-    onEdit?.(updatedUser);
-    setEditingUser(null);
-  };
+  function handleEditDialogOpenChange(open: boolean): void {
+    if (!open) {
+      setEditingUser(null);
+    }
+  }
 
-  const handleViewDetail = (user: User) => {
+  async function handleUserUpdate(
+    id: string,
+    userData: {
+      name?: string;
+      email?: string;
+      roleId?: string;
+      teamId?: string | null;
+      status?: "active" | "inactive" | "pending";
+    }
+  ): Promise<void> {
+    try {
+      await onEdit?.(id, userData);
+      setEditingUser(null);
+    } catch (error) {
+      console.error("Error updating user in table:", error);
+    }
+  }
+
+  async function handleUserDelete(user: User): Promise<void> {
+    if (onDelete) {
+      await onDelete(user);
+    }
+  }
+
+  function handleViewDetail(user: User): void {
     setViewingUser(user);
-  };
+  }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  function handleViewDialogOpenChange(open: boolean): void {
+    if (!open) {
+      setViewingUser(null);
+    }
+  }
 
-  const getRoleBadgeVariant = (roleName: string) => {
-    const normalizedRole = roleName.toLowerCase();
-    return ROLE_BADGE_OUTLINE_VARIANTS[normalizedRole] || "outline";
-  };
+  function handleEditButtonClick(event: React.MouseEvent, user: User): void {
+    event.stopPropagation();
+    handleEditClick(user);
+  }
+
+  function handleAlertDialogClick(event: React.MouseEvent): void {
+    event.stopPropagation();
+  }
+
+  function handleDeleteConfirm(event: React.MouseEvent, user: User): void {
+    event.stopPropagation();
+    handleUserDelete(user);
+  }
 
   return (
     <>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12">#</TableHead>
-            <TableHead>User</TableHead>
+            <TableHead>#</TableHead>
+            <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Team</TableHead>
@@ -102,17 +155,9 @@ export function UsersTable({
             >
               <TableCell>{index + 1}</TableCell>
               <TableCell>
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium">{user.name}</span>
-                </div>
+                <span className="font-medium">{user.name}</span>
               </TableCell>
-              <TableCell className="text-muted-foreground">
-                {user.email}
-              </TableCell>
+              <TableCell>{user.email}</TableCell>
               <TableCell>
                 <Badge variant={getRoleBadgeVariant(user.role.name)}>
                   {user.role.name}
@@ -120,51 +165,51 @@ export function UsersTable({
               </TableCell>
               <TableCell>{user.team?.name || "-"}</TableCell>
               <TableCell>
-                <Badge variant={USER_STATUS_BADGE_VARIANTS[user.status] || "secondary"}>
+                <Badge
+                  variant={
+                    USER_STATUS_BADGE_VARIANTS[user.status] || "secondary"
+                  }
+                >
                   {user.status}
                 </Badge>
               </TableCell>
-              <TableCell className="text-muted-foreground">
-                {user.createdAt}
-              </TableCell>
+              <TableCell>{user.createdAt}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
                   <Button
                     size="icon"
                     variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEdit(user);
-                    }}
+                    onClick={(e) => handleEditButtonClick(e, user)}
                   >
-                    <SquarePen size={16} />
+                    <SquarePen />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger
                       asChild
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={handleAlertDialogClick}
                     >
                       <Button
                         size="icon"
                         variant="outline"
                         className="text-destructive"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                    <AlertDialogContent onClick={handleAlertDialogClick}>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete User</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to delete &quot;{user.name}
-                          &quot;? This action cannot be undone.
+                          Are you sure you want to delete{" "}
+                          <span className="font-medium">{user.name}?</span> This
+                          action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          onClick={() => onDelete?.(user)}
+                          className="bg-destructive hover:bg-destructive/90"
+                          onClick={(e) => handleDeleteConfirm(e, user)}
                         >
                           Delete
                         </AlertDialogAction>
@@ -182,15 +227,17 @@ export function UsersTable({
         user={editingUser || undefined}
         roles={roles}
         teams={teams}
+        rolesLoading={rolesLoading}
+        teamsLoading={teamsLoading}
         open={!!editingUser}
-        onOpenChange={(open) => !open && setEditingUser(null)}
-        onUpdate={handleUpdate}
+        onOpenChange={handleEditDialogOpenChange}
+        onUpdate={handleUserUpdate}
       />
 
       <UserDetailDialog
         user={viewingUser}
         open={!!viewingUser}
-        onOpenChange={(open) => !open && setViewingUser(null)}
+        onOpenChange={handleViewDialogOpenChange}
       />
     </>
   );

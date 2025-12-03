@@ -26,76 +26,159 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { User, Role, Team } from "@/type/user";
-import { userFormSchema, UserFormValues } from "@/schema/user.schema";
+import { userEditFormSchema, UserEditFormValues } from "@/schema/user.schema";
+import { Spinner } from "@/components/ui/spinner";
 
 interface EditUserDialogProps {
   user?: User;
   roles: Role[];
   teams: Team[];
+  rolesLoading?: boolean;
+  teamsLoading?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (user: User) => void;
+  onUpdate: (
+    id: string,
+    userData: {
+      name?: string;
+      email?: string;
+      password?: string;
+      roleId?: string;
+      teamId?: string | null;
+      status?: "active" | "inactive" | "pending";
+    }
+  ) => Promise<void>;
 }
 
 export function EditUserDialog({
   user,
   roles,
   teams,
+  rolesLoading = false,
+  teamsLoading = false,
   open,
   onOpenChange,
   onUpdate,
 }: EditUserDialogProps) {
-  const form = useForm<UserFormValues>({
-    resolver: zodResolver(userFormSchema),
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<UserEditFormValues>({
+    resolver: zodResolver(userEditFormSchema),
     defaultValues: {
       name: "",
       email: "",
-      avatar: "",
+      password: "",
       roleId: "",
-      teamId: "",
+      teamId: undefined,
       status: "pending",
     },
   });
 
   useEffect(() => {
     if (user) {
+      const normalizeStatus = (
+        status: string
+      ): "active" | "inactive" | "pending" => {
+        if (!status) return "pending";
+        const normalized = status.toLowerCase();
+        // Handle SUSPENDING from API
+        if (normalized === "suspending") return "inactive";
+        if (
+          normalized === "pending" ||
+          normalized === "active" ||
+          normalized === "inactive"
+        ) {
+          return normalized as "active" | "inactive" | "pending";
+        }
+        return "pending"; // default
+      };
+
+      // Normalize roleId - ensure it's a string (handle both number and string from API)
+      const roleId = user.role?.id ? String(user.role.id) : "";
+
+      // Normalize teamId - ensure it's a string or undefined (handle both number and string from API)
+      const teamId = user.team?.id ? String(user.team.id) : undefined;
+
+      console.log("Edit user data:", {
+        user,
+        userTeam: user.team,
+        normalized: {
+          roleId,
+          teamId,
+          status: normalizeStatus(user.status || "pending"),
+        },
+      });
+
       form.reset({
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar || "",
-        roleId: user.role.id,
-        teamId: user.team?.id || "",
-        status: user.status,
+        name: user.name || "",
+        email: user.email || "",
+        password: "", // Don't show password in edit
+        roleId: roleId,
+        teamId: teamId || undefined,
+        status: normalizeStatus(user.status || "pending"),
       });
     }
   }, [user, form]);
 
-  const handleSubmit = (values: UserFormValues) => {
-    if (!user) return;
+  const handleSubmit = async (values: UserEditFormValues) => {
+    if (!user) {
+      console.error("No user provided to edit");
+      return;
+    }
 
-    const role = roles.find((r) => r.id === values.roleId)!;
-    const team = teams.find((t) => t.id === values.teamId);
+    try {
+      setIsSubmitting(true);
+      console.log("Submitting edit form:", {
+        userId: user.id,
+        values: {
+          ...values,
+          password: "***",
+        },
+      });
 
-    onUpdate({
-      ...user,
-      name: values.name,
-      email: values.email,
-      avatar: values.avatar || user.avatar,
-      role,
-      team,
-      status: values.status,
-      updatedAt: new Date().toISOString().split("T")[0],
-    });
+      const updateData: {
+        name?: string;
+        email?: string;
+        password?: string;
+        roleId?: string;
+        teamId?: string | null;
+        status?: "active" | "inactive" | "pending";
+      } = {
+        name: values.name,
+        email: values.email,
+        roleId: values.roleId,
+        teamId: values.teamId || null,
+        status: values.status,
+      };
 
-    onOpenChange(false);
+      // Only include password if it's provided (not empty)
+      if (values.password && values.password.trim() !== "") {
+        updateData.password = values.password;
+      }
+
+      console.log("Calling onUpdate with:", {
+        id: user.id,
+        data: updateData,
+      });
+
+      await onUpdate(user.id, updateData);
+
+      console.log("Update successful, closing dialog");
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      // Don't close dialog on error
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
@@ -103,7 +186,10 @@ export function EditUserDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -134,25 +220,58 @@ export function EditUserDialog({
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Leave blank to keep current password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="roleId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select role" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.id}>
-                            {role.name}
-                          </SelectItem>
-                        ))}
+                        {rolesLoading ? (
+                          <div className="flex items-center justify-center py-4">
+                            <Spinner />
+                          </div>
+                        ) : roles.length === 0 ? (
+                          <div className="py-4 text-center text-sm text-muted-foreground">
+                            No roles available
+                          </div>
+                        ) : (
+                          roles.map((role) => (
+                            <SelectItem
+                              key={role.id || role.name}
+                              value={role.id}
+                            >
+                              {role.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -162,22 +281,73 @@ export function EditUserDialog({
               <FormField
                 control={form.control}
                 name="teamId"
+                render={({ field }) => {
+                  // Ensure value is string and handle undefined/empty
+                  const currentValue = field.value
+                    ? String(field.value)
+                    : "none";
+
+                  return (
+                    <FormItem>
+                      <FormLabel>Team (Optional)</FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          console.log("Team select changed:", value);
+                          field.onChange(value === "none" ? undefined : value);
+                        }}
+                        value={currentValue}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select team" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">No Team</SelectItem>
+                          {teamsLoading ? (
+                            <div className="flex items-center justify-center py-4">
+                              <Spinner />
+                            </div>
+                          ) : teams.length === 0 ? (
+                            <div className="py-4 text-center text-sm text-muted-foreground">
+                              No teams available
+                            </div>
+                          ) : (
+                            teams.map((team) => (
+                              <SelectItem
+                                key={String(team.id) || team.name}
+                                value={String(team.id)}
+                              >
+                                {team.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+              <FormField
+                control={form.control}
+                name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Team (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || "pending"}
+                    >
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select team" />
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No Team</SelectItem>
-                        {teams.map((team) => (
-                          <SelectItem key={team.id} value={team.id}>
-                            {team.name}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -185,37 +355,34 @@ export function EditUserDialog({
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
-              <Button type="submit">Save Changes</Button>
+              <Button
+                type="submit"
+                disabled={
+                  isSubmitting ||
+                  rolesLoading ||
+                  teamsLoading ||
+                  roles.length === 0
+                }
+              >
+                {isSubmitting ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
