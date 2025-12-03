@@ -76,7 +76,6 @@ export function CreateUserDialog({
   async function handleSubmit(values: UserFormValues): Promise<void> {
     try {
       setIsSubmitting(true);
-      console.log("Submitting user data:", values);
       await onSubmit({
         name: values.name,
         email: values.email,

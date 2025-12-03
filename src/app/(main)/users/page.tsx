@@ -110,7 +110,6 @@ export default function UsersPage() {
     status: "active" | "inactive" | "pending";
   }): Promise<void> {
     try {
-      console.log("Creating user with data:", { ...newUser, password: "***" });
       await apiCreateUser(newUser);
     } catch (error) {
       console.error("Error creating user:", error);
@@ -138,11 +137,9 @@ export default function UsersPage() {
 
   async function handleDeleteUser(user: User): Promise<void> {
     try {
-      console.log("Deleting user:", user.id, user.name);
       await apiDeleteUser(user.id);
     } catch (error) {
       console.error("Error deleting user:", error);
-      // Error is already handled in the hook
     }
   }
 

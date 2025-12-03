@@ -102,16 +102,6 @@ export function EditUserDialog({
       // Normalize teamId - ensure it's a string or undefined (handle both number and string from API)
       const teamId = user.team?.id ? String(user.team.id) : undefined;
 
-      console.log("Edit user data:", {
-        user,
-        userTeam: user.team,
-        normalized: {
-          roleId,
-          teamId,
-          status: normalizeStatus(user.status || "pending"),
-        },
-      });
-
       form.reset({
         name: user.name || "",
         email: user.email || "",
@@ -131,14 +121,6 @@ export function EditUserDialog({
 
     try {
       setIsSubmitting(true);
-      console.log("Submitting edit form:", {
-        userId: user.id,
-        values: {
-          ...values,
-          password: "***",
-        },
-      });
-
       const updateData: {
         name?: string;
         email?: string;
@@ -159,14 +141,8 @@ export function EditUserDialog({
         updateData.password = values.password;
       }
 
-      console.log("Calling onUpdate with:", {
-        id: user.id,
-        data: updateData,
-      });
-
       await onUpdate(user.id, updateData);
 
-      console.log("Update successful, closing dialog");
       onOpenChange(false);
     } catch (error) {
       console.error("Error updating user:", error);
@@ -292,7 +268,6 @@ export function EditUserDialog({
                       <FormLabel>Team (Optional)</FormLabel>
                       <Select
                         onValueChange={(value) => {
-                          console.log("Team select changed:", value);
                           field.onChange(value === "none" ? undefined : value);
                         }}
                         value={currentValue}

@@ -10,13 +10,13 @@ const getAuthHeaders = (): HeadersInit => {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   };
-  
+
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   } else {
     console.warn("No token found in cookies");
   }
-  
+
   return headers;
 };
 
@@ -61,15 +61,21 @@ export const usersService = {
     }
 
     const data = await response.json();
-    
+
     // Helper to normalize user data from API
     const normalizeUser = (user: any): User => {
       // Normalize status from API format to our format
-      const normalizeStatus = (status: string): "active" | "inactive" | "pending" => {
+      const normalizeStatus = (
+        status: string
+      ): "active" | "inactive" | "pending" => {
         const normalized = status?.toLowerCase() || "pending";
         // Handle SUSPENDING from API
         if (normalized === "suspending") return "inactive";
-        if (normalized === "pending" || normalized === "active" || normalized === "inactive") {
+        if (
+          normalized === "pending" ||
+          normalized === "active" ||
+          normalized === "inactive"
+        ) {
           return normalized as "active" | "inactive" | "pending";
         }
         return "pending";
@@ -86,27 +92,33 @@ export const usersService = {
           description: user.role?.description || undefined,
           permissions: user.role?.permissions || [],
           color: user.role?.color || undefined,
-          createdAt: user.role?.createdAt || user.createdAt || new Date().toISOString(),
-          updatedAt: user.role?.updatedAt || user.updatedAt || new Date().toISOString(),
+          createdAt:
+            user.role?.createdAt || user.createdAt || new Date().toISOString(),
+          updatedAt:
+            user.role?.updatedAt || user.updatedAt || new Date().toISOString(),
         },
-        team: user.team ? {
-          id: String(user.team.id || ""),
-          name: user.team.name || "",
-          description: user.team.description || undefined,
-          members: user.team.members || [],
-          leader: user.team.leader || undefined,
-          createdAt: user.team.createdAt || new Date().toISOString(),
-          updatedAt: user.team.updatedAt || new Date().toISOString(),
-        } : undefined,
+        team: user.team
+          ? {
+              id: String(user.team.id || ""),
+              name: user.team.name || "",
+              description: user.team.description || undefined,
+              members: user.team.members || [],
+              leader: user.team.leader || undefined,
+              createdAt: user.team.createdAt || new Date().toISOString(),
+              updatedAt: user.team.updatedAt || new Date().toISOString(),
+            }
+          : undefined,
         status: normalizeStatus(user.status),
-        createdAt: user.createdAt || user.created_at || new Date().toISOString(),
-        updatedAt: user.updatedAt || user.updated_at || new Date().toISOString(),
+        createdAt:
+          user.createdAt || user.created_at || new Date().toISOString(),
+        updatedAt:
+          user.updatedAt || user.updated_at || new Date().toISOString(),
       };
     };
-    
+
     // Handle different response formats
     let usersArray: User[] = [];
-    
+
     if (Array.isArray(data)) {
       usersArray = data.map(normalizeUser);
       return {
@@ -148,15 +160,21 @@ export const usersService = {
     }
 
     const data = await response.json();
-    
+
     // Helper to normalize user data from API
     const normalizeUser = (user: any): User => {
       // Normalize status from API format to our format
-      const normalizeStatus = (status: string): "active" | "inactive" | "pending" => {
+      const normalizeStatus = (
+        status: string
+      ): "active" | "inactive" | "pending" => {
         const normalized = status?.toLowerCase() || "pending";
         // Handle SUSPENDING from API
         if (normalized === "suspending") return "inactive";
-        if (normalized === "pending" || normalized === "active" || normalized === "inactive") {
+        if (
+          normalized === "pending" ||
+          normalized === "active" ||
+          normalized === "inactive"
+        ) {
           return normalized as "active" | "inactive" | "pending";
         }
         return "pending";
@@ -173,24 +191,30 @@ export const usersService = {
           description: user.role?.description || undefined,
           permissions: user.role?.permissions || [],
           color: user.role?.color || undefined,
-          createdAt: user.role?.createdAt || user.createdAt || new Date().toISOString(),
-          updatedAt: user.role?.updatedAt || user.updatedAt || new Date().toISOString(),
+          createdAt:
+            user.role?.createdAt || user.createdAt || new Date().toISOString(),
+          updatedAt:
+            user.role?.updatedAt || user.updatedAt || new Date().toISOString(),
         },
-        team: user.team ? {
-          id: String(user.team.id || ""),
-          name: user.team.name || "",
-          description: user.team.description || undefined,
-          members: user.team.members || [],
-          leader: user.team.leader || undefined,
-          createdAt: user.team.createdAt || new Date().toISOString(),
-          updatedAt: user.team.updatedAt || new Date().toISOString(),
-        } : undefined,
+        team: user.team
+          ? {
+              id: String(user.team.id || ""),
+              name: user.team.name || "",
+              description: user.team.description || undefined,
+              members: user.team.members || [],
+              leader: user.team.leader || undefined,
+              createdAt: user.team.createdAt || new Date().toISOString(),
+              updatedAt: user.team.updatedAt || new Date().toISOString(),
+            }
+          : undefined,
         status: normalizeStatus(user.status),
-        createdAt: user.createdAt || user.created_at || new Date().toISOString(),
-        updatedAt: user.updatedAt || user.updated_at || new Date().toISOString(),
+        createdAt:
+          user.createdAt || user.created_at || new Date().toISOString(),
+        updatedAt:
+          user.updatedAt || user.updated_at || new Date().toISOString(),
       };
     };
-    
+
     const rawUser = data.data || data;
     return normalizeUser(rawUser);
   },
@@ -217,7 +241,9 @@ export const usersService = {
       name: userData.name,
       email: userData.email,
       roleId: Number(userData.roleId), // Convert to number
-      status: userData.status ? statusMap[userData.status] || userData.status.toUpperCase() : "PENDING",
+      status: userData.status
+        ? statusMap[userData.status] || userData.status.toUpperCase()
+        : "PENDING",
     };
 
     // Add password if provided
@@ -230,36 +256,29 @@ export const usersService = {
       apiData.teamId = Number(userData.teamId);
     }
 
-    console.log("Register API call:", {
-      url: `${API_BASE_URL}/register`,
-      data: { ...apiData, password: apiData.password ? "***" : undefined },
-    });
-
     const response = await fetch(`${API_BASE_URL}/register`, {
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify(apiData),
     });
 
-    console.log("Register API response status:", response.status, response.statusText);
-
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       console.error("Register API error:", error);
-      
+
       // Handle error message array
-      let errorMessage = error.error || `Failed to register user: ${response.statusText}`;
+      let errorMessage =
+        error.error || `Failed to register user: ${response.statusText}`;
       if (Array.isArray(error.message)) {
         errorMessage = error.message.join(", ");
       } else if (error.message && typeof error.message === "string") {
         errorMessage = error.message;
       }
-      
+
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
-    console.log("Register API success:", data);
     return data.data || data;
   },
 
@@ -331,19 +350,12 @@ export const usersService = {
 
     // Convert status to uppercase
     if (userData.status !== undefined) {
-      apiData.status = statusMap[userData.status] || userData.status.toUpperCase();
+      apiData.status =
+        statusMap[userData.status] || userData.status.toUpperCase();
     }
 
     const headers = getAuthHeaders();
     const token = Cookies.get("token");
-    
-    console.log("Update API call:", {
-      url: `${API_BASE_URL}/users/${id}`,
-      data: apiData,
-      hasToken: !!token,
-      tokenPrefix: token ? token.substring(0, 20) + "..." : "no token",
-      headers,
-    });
 
     const response = await fetch(`${API_BASE_URL}/users/${id}`, {
       method: "PATCH",
@@ -351,47 +363,46 @@ export const usersService = {
       body: JSON.stringify(apiData),
     });
 
-    console.log("Update API response status:", response.status, response.statusText);
-
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      console.error("Update API error:", {
-        status: response.status,
-        statusText: response.statusText,
-        error,
-        url: `${API_BASE_URL}/users/${id}`,
-        hasToken: !!token,
-      });
-      
+      console.error("Update API error:", error);
+
       // Handle 403 Forbidden - permission issue
       if (response.status === 403) {
-        const errorMessage = error.message || error.error || "Forbidden resource";
+        const errorMessage =
+          error.message || error.error || "Forbidden resource";
         // Throw with status code included for easier detection
         const forbiddenError = new Error(`403: ${errorMessage}`);
         (forbiddenError as any).status = 403;
         throw forbiddenError;
       }
-      
+
       // Handle error message array
-      let errorMessage = error.error || `Failed to update user: ${response.statusText}`;
+      let errorMessage =
+        error.error || `Failed to update user: ${response.statusText}`;
       if (Array.isArray(error.message)) {
         errorMessage = error.message.join(", ");
       } else if (error.message && typeof error.message === "string") {
         errorMessage = error.message;
       }
-      
+
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
-    console.log("Update API success:", data);
-    
+
     // Normalize the updated user data
     const normalizeUser = (user: any): User => {
-      const normalizeStatus = (status: string): "active" | "inactive" | "pending" => {
+      const normalizeStatus = (
+        status: string
+      ): "active" | "inactive" | "pending" => {
         const normalized = status?.toLowerCase() || "pending";
         if (normalized === "suspending") return "inactive";
-        if (normalized === "pending" || normalized === "active" || normalized === "inactive") {
+        if (
+          normalized === "pending" ||
+          normalized === "active" ||
+          normalized === "inactive"
+        ) {
           return normalized as "active" | "inactive" | "pending";
         }
         return "pending";
@@ -408,24 +419,30 @@ export const usersService = {
           description: user.role?.description || undefined,
           permissions: user.role?.permissions || [],
           color: user.role?.color || undefined,
-          createdAt: user.role?.createdAt || user.createdAt || new Date().toISOString(),
-          updatedAt: user.role?.updatedAt || user.updatedAt || new Date().toISOString(),
+          createdAt:
+            user.role?.createdAt || user.createdAt || new Date().toISOString(),
+          updatedAt:
+            user.role?.updatedAt || user.updatedAt || new Date().toISOString(),
         },
-        team: user.team ? {
-          id: String(user.team.id || ""),
-          name: user.team.name || "",
-          description: user.team.description || undefined,
-          members: user.team.members || [],
-          leader: user.team.leader || undefined,
-          createdAt: user.team.createdAt || new Date().toISOString(),
-          updatedAt: user.team.updatedAt || new Date().toISOString(),
-        } : undefined,
+        team: user.team
+          ? {
+              id: String(user.team.id || ""),
+              name: user.team.name || "",
+              description: user.team.description || undefined,
+              members: user.team.members || [],
+              leader: user.team.leader || undefined,
+              createdAt: user.team.createdAt || new Date().toISOString(),
+              updatedAt: user.team.updatedAt || new Date().toISOString(),
+            }
+          : undefined,
         status: normalizeStatus(user.status),
-        createdAt: user.createdAt || user.created_at || new Date().toISOString(),
-        updatedAt: user.updatedAt || user.updated_at || new Date().toISOString(),
+        createdAt:
+          user.createdAt || user.created_at || new Date().toISOString(),
+        updatedAt:
+          user.updatedAt || user.updated_at || new Date().toISOString(),
       };
     };
-    
+
     const rawUser = data.data || data;
     return normalizeUser(rawUser);
   },
@@ -434,53 +451,36 @@ export const usersService = {
   delete: async (id: string): Promise<void> => {
     const headers = getAuthHeaders();
     const token = Cookies.get("token");
-    
-    console.log("Delete API call:", {
-      url: `${API_BASE_URL}/users/${id}`,
-      id,
-      hasToken: !!token,
-      tokenPrefix: token ? token.substring(0, 20) + "..." : "no token",
-      headers,
-    });
 
     const response = await fetch(`${API_BASE_URL}/users/${id}`, {
       method: "DELETE",
       headers,
     });
 
-    console.log("Delete API response status:", response.status, response.statusText);
-
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      console.error("Delete API error:", {
-        status: response.status,
-        statusText: response.statusText,
-        error,
-        url: `${API_BASE_URL}/users/${id}`,
-        hasToken: !!token,
-      });
-      
+      console.error("Delete API error:", error);
+
       // Handle 403 Forbidden - permission issue
       if (response.status === 403) {
-        const errorMessage = error.message || error.error || "Forbidden resource";
+        const errorMessage =
+          error.message || error.error || "Forbidden resource";
         // Throw with status code included for easier detection
         const forbiddenError = new Error(`403: ${errorMessage}`);
         (forbiddenError as any).status = 403;
         throw forbiddenError;
       }
-      
+
       // Handle error message array
-      let errorMessage = error.error || `Failed to delete user: ${response.statusText}`;
+      let errorMessage =
+        error.error || `Failed to delete user: ${response.statusText}`;
       if (Array.isArray(error.message)) {
         errorMessage = error.message.join(", ");
       } else if (error.message && typeof error.message === "string") {
         errorMessage = error.message;
       }
-      
+
       throw new Error(errorMessage);
     }
-
-    console.log("Delete API success");
   },
 };
-
