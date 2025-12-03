@@ -34,7 +34,7 @@ import {
   Priority,
 } from "@/type/idea";
 import { STATUS_ORDER } from "@/type/kanban";
-import { getStatusLabel } from "@/data/idea";
+import { getStatusLabel } from "@/utils/idea-helpers";
 import {
   getInitials,
   getDetailedDeadlineStatus,

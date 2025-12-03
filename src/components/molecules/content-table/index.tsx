@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Content, ContentStatus } from "@/type/content";
-import { getStatusLabel, getPlatformLabel } from "@/data/content";
+import { getStatusLabel, getPlatformLabel } from "@/utils/content-helpers";
 import {
   CONTENT_STATUS_BADGE_OUTLINE_VARIANTS,
   CONTENT_PLATFORM_BADGE_OUTLINE_VARIANTS,
@@ -76,7 +76,7 @@ export function ContentTable({
             onClick={() => onViewDetail(content)}
           >
             <TableCell>
-              {content.mockups.length > 0 ? (
+              {content.mockups.length > 0 && content.mockups[0].url ? (
                 <div className="relative w-12 h-12 rounded-md overflow-hidden border">
                   <Image
                     src={content.mockups[0].url}
@@ -158,9 +158,7 @@ export function ContentTable({
                 <span className="text-muted-foreground text-sm">-</span>
               )}
             </TableCell>
-            <TableCell className="text-muted-foreground text-sm">
-              {content.updatedAt}
-            </TableCell>
+            <TableCell className="text-muted-foreground text-sm">-</TableCell>
             <TableCell className="text-right">
               <DropdownMenu>
                 <DropdownMenuTrigger
@@ -194,7 +192,7 @@ export function ContentTable({
                           variant={
                             CONTENT_STATUS_BADGE_OUTLINE_VARIANTS[status]
                           }
-                          className="w-2 h-2 p-0 mr-2 rounded-full"
+                          className="p-0 mr-2 rounded-full"
                         />
                         {getStatusLabel(status)}
                       </DropdownMenuItem>
@@ -204,7 +202,7 @@ export function ContentTable({
                     className="text-destructive"
                     onClick={() => onDelete(content.id)}
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>

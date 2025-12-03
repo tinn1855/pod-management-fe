@@ -15,13 +15,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Search, Plus, Store as StoreIcon } from "lucide-react";
-import {
-  mockAccounts,
-  mockStores,
-  mockPlatforms,
-  getAccountStats,
-  getPlatformLabel,
-} from "@/data/platform";
+import { getAccountStats, getPlatformLabel } from "@/utils/platform-helpers";
+
 import { Account, Store, PlatformType } from "@/type/platform";
 import { AccountTable } from "@/components/molecules/account-table";
 import { StoreTable } from "@/components/molecules/store-table";
@@ -42,8 +37,18 @@ function AccountsPageContent() {
     | "accounts"
     | "stores";
 
-  const [accounts, setAccounts] = useState<Account[]>(mockAccounts);
-  const [stores, setStores] = useState<Store[]>(mockStores);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
+  // TODO: Replace with API call - usePlatforms hook
+  // For now, use platform types directly
+  const platformTypes: PlatformType[] = [
+    "etsy",
+    "amazon",
+    "shopify",
+    "ebay",
+    "tiktok",
+    "other",
+  ];
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -64,7 +69,7 @@ function AccountsPageContent() {
     [searchParams, pathname, router]
   );
 
-  const stats = getAccountStats();
+  const stats = getAccountStats(accounts, stores);
 
   // Filter accounts
   const filteredAccounts = useMemo(() => {
@@ -138,11 +143,11 @@ function AccountsPageContent() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleAddStore}>
-            <StoreIcon className="mr-2 h-4 w-4" />
+            <StoreIcon />
             Add Store
           </Button>
           <Button onClick={handleAddAccount}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus />
             Add Account
           </Button>
         </div>
@@ -168,7 +173,7 @@ function AccountsPageContent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Stores</CardTitle>
-            <StoreIcon className="h-4 w-4 text-muted-foreground" />
+            <StoreIcon className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalStores}</div>
@@ -209,24 +214,27 @@ function AccountsPageContent() {
         >
           All Platforms
         </Badge>
-        {mockPlatforms.map((platform) => (
-          <Badge
-            key={platform.id}
-            variant={
-              platformFilter === platform.type
-                ? PLATFORM_BADGE_VARIANTS[platform.type]
-                : PLATFORM_BADGE_OUTLINE_VARIANTS[platform.type]
-            }
-            className="cursor-pointer"
-            onClick={() =>
-              setPlatformFilter(
-                platform.type === platformFilter ? "all" : platform.type
-              )
-            }
-          >
-            {platform.name}: {stats.byPlatform[platform.type]}
-          </Badge>
-        ))}
+        {platformTypes.map((platform) => {
+          const count = stats.byPlatform[platform] || 0;
+          return (
+            <Badge
+              key={platform}
+              variant={
+                platformFilter === platform
+                  ? PLATFORM_BADGE_VARIANTS[platform]
+                  : PLATFORM_BADGE_OUTLINE_VARIANTS[platform]
+              }
+              className="cursor-pointer"
+              onClick={() =>
+                setPlatformFilter(
+                  platform === platformFilter ? "all" : platform
+                )
+              }
+            >
+              {getPlatformLabel(platform)}: {count}
+            </Badge>
+          );
+        })}
       </div>
 
       {/* Filters */}
@@ -247,9 +255,9 @@ function AccountsPageContent() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Platforms</SelectItem>
-            {mockPlatforms.map((platform) => (
-              <SelectItem key={platform.id} value={platform.type}>
-                {platform.name}
+            {platformTypes.map((platform) => (
+              <SelectItem key={platform} value={platform}>
+                {getPlatformLabel(platform)}
               </SelectItem>
             ))}
           </SelectContent>

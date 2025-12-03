@@ -14,7 +14,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PenTool, Search, Upload, Folder } from "lucide-react";
 import { useState } from "react";
-import { mockDesigns } from "@/data/idea";
+// TODO: Replace with API call
+// import { useDesigns } from "@/hooks/use-designs";
 import { toast } from "sonner";
 import { DESIGN_STATUS_BADGE_VARIANTS } from "@/constants/badge-variants";
 
@@ -30,7 +31,10 @@ export default function DesignsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const filteredDesigns = mockDesigns.filter((design) => {
+  // TODO: Replace with API call
+  // const { designs, loading } = useDesigns();
+  const [designs] = useState<any[]>([]);
+  const filteredDesigns = designs.filter((design) => {
     const matchesSearch = design.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -66,11 +70,11 @@ export default function DesignsPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleManageFolders}>
-            <Folder className="mr-2 h-4 w-4" />
+            <Folder />
             Manage Folders
           </Button>
           <Button onClick={handleUpload}>
-            <Upload className="mr-2 h-4 w-4" />
+            <Upload />
             Upload Design
           </Button>
         </div>
@@ -129,7 +133,9 @@ export default function DesignsPage() {
               </Badge>
             </div>
             <CardContent className="p-4">
-              <h3 className="font-semibold mb-1 line-clamp-1">{design.title}</h3>
+              <h3 className="font-semibold mb-1 line-clamp-1">
+                {design.title}
+              </h3>
               <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
                 {design.description}
               </p>
@@ -150,8 +156,12 @@ export default function DesignsPage() {
                 </div>
               </div>
               <div className="flex gap-2 mt-3">
-                {design.files.slice(0, 3).map((file) => (
-                  <Badge key={file.id} variant="outline" className="text-[10px]">
+                {design.files.slice(0, 3).map((file: any) => (
+                  <Badge
+                    key={file.id}
+                    variant="outline"
+                    className="text-[10px]"
+                  >
                     .{file.type}
                   </Badge>
                 ))}

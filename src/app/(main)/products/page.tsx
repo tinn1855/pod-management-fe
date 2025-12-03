@@ -10,59 +10,83 @@ import {
 } from "@/components/ui/select";
 import { AppPagination } from "@/components/molecules/pagination";
 import { ProductsTable } from "@/components/molecules/product-table";
-import { mockProducts } from "@/data/product";
 import { useState, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { CreateProductDialog } from "@/components/molecules/product-create-dialog";
 import { Product } from "@/type/product";
 import { ITEMS_PER_PAGE } from "@/constants";
 import { CategoryManagement } from "@/components/molecules/category-management";
-
-// Get unique categories from products
-const categories = [...new Set(mockProducts.map((p) => p.category))];
+import { useProducts } from "@/hooks/use-products";
+import { Loader2 } from "lucide-react";
 
 function ProductsContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page") ?? 1);
   const view = searchParams.get("view") ?? "products";
 
-  const [products, setProducts] = useState<Product[]>(mockProducts);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (product.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ??
-          false);
-      const matchesCategory =
-        categoryFilter === "all" || product.category === categoryFilter;
-      const matchesStatus =
-        statusFilter === "all" || product.status === statusFilter;
-      return matchesSearch && matchesCategory && matchesStatus;
-    });
-  }, [products, searchQuery, categoryFilter, statusFilter]);
+  // Fetch products from API
+  const {
+    products: apiProducts,
+    loading,
+    error,
+    total,
+    updateProduct,
+    deleteProduct,
+  } = useProducts({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    search: searchQuery || undefined,
+    category: categoryFilter !== "all" ? categoryFilter : undefined,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+  });
 
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  // Get unique categories from products
+  const categories = useMemo(() => {
+    return [...new Set(apiProducts.map((p) => p.category))];
+  }, [apiProducts]);
 
-  const paginatedProducts = useMemo(() => {
-    return filteredProducts.slice(
-      (currentPage - 1) * ITEMS_PER_PAGE,
-      currentPage * ITEMS_PER_PAGE
-    );
-  }, [filteredProducts, currentPage]);
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
-  const handleEdit = (updatedProduct: Product) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
-    );
+  const handleEdit = async (updatedProduct: Product) => {
+    await updateProduct(updatedProduct.id, updatedProduct);
   };
 
-  const handleDelete = (product: Product) => {
-    setProducts((prev) => prev.filter((p) => p.id !== product.id));
+  const handleDelete = async (product: Product) => {
+    await deleteProduct(product.id);
   };
+
+  // Loading state
+  if (loading && apiProducts.length === 0) {
+    return (
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Product Management</h1>
+        </div>
+        <div className="flex items-center justify-center py-12 gap-2">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          <p className="text-muted-foreground text-sm">Loading products...</p>
+        </div>
+      </section>
+    );
+  }
+
+  // Error state
+  if (error && apiProducts.length === 0) {
+    return (
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Product Management</h1>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 gap-2">
+          <p className="text-destructive">Error: {error}</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="space-y-6">
@@ -107,12 +131,11 @@ function ProductsContent() {
           </div>
 
           <div className="text-sm text-muted-foreground">
-            Showing {paginatedProducts.length} of {filteredProducts.length}{" "}
-            products
+            Showing {apiProducts.length} of {total} products
           </div>
 
           <ProductsTable
-            products={paginatedProducts}
+            products={apiProducts}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />

@@ -28,61 +28,17 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
-import { useState } from "react";
-import { mockUsers } from "@/data/user";
+import { useState, useMemo } from "react";
+import { useUsers } from "@/hooks/use-users";
 import { toast } from "sonner";
 import {
   TASK_STATUS_BADGE_OUTLINE_VARIANTS,
   PRIORITY_BADGE_OUTLINE_VARIANTS,
 } from "@/constants/badge-variants";
 
-// Mock tasks data
-const mockTasks = [
-  {
-    id: "task-1",
-    title: "Design T-Shirt Summer Collection",
-    ideaId: "idea-1",
-    assignee: mockUsers[3],
-    assignedBy: mockUsers[1],
-    status: "in_progress",
-    priority: "high",
-    dueDate: "2024-01-25",
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "task-2",
-    title: "Fix mockup for Mug Design",
-    ideaId: "idea-2",
-    assignee: mockUsers[4],
-    assignedBy: mockUsers[1],
-    status: "todo",
-    priority: "medium",
-    dueDate: "2024-01-23",
-    createdAt: "2024-01-16",
-  },
-  {
-    id: "task-3",
-    title: "Upload final file for Street Hoodie",
-    ideaId: "idea-5",
-    assignee: mockUsers[3],
-    assignedBy: mockUsers[2],
-    status: "review",
-    priority: "urgent",
-    dueDate: "2024-01-22",
-    createdAt: "2024-01-18",
-  },
-  {
-    id: "task-4",
-    title: "Create mockup for Sticker Pack",
-    ideaId: "idea-7",
-    assignee: mockUsers[4],
-    assignedBy: mockUsers[2],
-    status: "done",
-    priority: "low",
-    dueDate: "2024-01-20",
-    createdAt: "2024-01-17",
-  },
-];
+// TODO: Replace with API call
+// const { tasks, loading } = useTasks();
+const mockTasks: any[] = [];
 
 const statusLabels: Record<string, string> = {
   todo: "Pending",

@@ -3,27 +3,29 @@
 import { Input } from "@/components/ui/input";
 import { AppPagination } from "@/components/molecules/pagination";
 import { RolesTable } from "@/components/molecules/role-table";
-import { mockRoles, mockPermissions } from "@/data/user";
 import { useState, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { CreateRoleDialog } from "@/components/molecules/role-create-dialog";
 import { Role } from "@/type/user";
 import { ITEMS_PER_PAGE } from "@/constants";
+import { useRoles } from "@/hooks/use-roles";
+import { Loader2 } from "lucide-react";
 
 function RolesPageContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page") ?? 1);
 
-  const [roles, setRoles] = useState<Role[]>(mockRoles);
+  // Fetch roles from API
+  const { roles: apiRoles, loading, error } = useRoles(true);
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredRoles = useMemo(() => {
-    return roles.filter(
+    return apiRoles.filter(
       (role) =>
         role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         role.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [roles, searchQuery]);
+  }, [apiRoles, searchQuery]);
 
   const totalPages = Math.ceil(filteredRoles.length / ITEMS_PER_PAGE);
 
@@ -37,31 +39,55 @@ function RolesPageContent() {
   const handleCreate = (
     newRole: Omit<Role, "id" | "createdAt" | "updatedAt">
   ) => {
-    const role: Role = {
-      ...newRole,
-      id: `role-${Date.now()}`,
-      createdAt: new Date().toISOString().split("T")[0],
-      updatedAt: new Date().toISOString().split("T")[0],
-    };
-    setRoles((prev) => [role, ...prev]);
+    // TODO: Implement API call to create role
+    console.log("Create role:", newRole);
   };
 
   const handleEdit = (updatedRole: Role) => {
-    setRoles((prev) =>
-      prev.map((r) => (r.id === updatedRole.id ? updatedRole : r))
-    );
+    // TODO: Implement API call to update role
+    console.log("Edit role:", updatedRole);
   };
 
   const handleDelete = (role: Role) => {
-    setRoles((prev) => prev.filter((r) => r.id !== role.id));
+    // TODO: Implement API call to delete role
+    console.log("Delete role:", role);
   };
+
+  // Loading state
+  if (loading && apiRoles.length === 0) {
+    return (
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Role Management</h1>
+        </div>
+        <div className="flex items-center justify-center py-12 gap-2">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          <p className="text-muted-foreground text-sm">Loading roles...</p>
+        </div>
+      </section>
+    );
+  }
+
+  // Error state
+  if (error && apiRoles.length === 0) {
+    return (
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Role Management</h1>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 gap-2">
+          <p className="text-destructive">Error: {error}</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Role Management</h1>
         <CreateRoleDialog
-          permissions={mockPermissions}
+          permissions={[]}
           onSubmit={handleCreate}
         />
       </div>
@@ -81,7 +107,7 @@ function RolesPageContent() {
 
       <RolesTable
         roles={paginatedRoles}
-        permissions={mockPermissions}
+        permissions={[]}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />

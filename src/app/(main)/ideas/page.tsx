@@ -11,13 +11,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LayoutGrid, List, Search } from "lucide-react";
-import { mockIdeas } from "@/data/idea";
 import { Idea, IdeaStatus } from "@/type/idea";
 import { IdeaKanbanBoard } from "@/components/molecules/idea-kanban-board";
 import { IdeaListView } from "@/components/molecules/idea-list-view";
 import { CreateIdeaDialog } from "@/components/molecules/idea-create-dialog";
 import { IdeaDetailDialog } from "@/components/molecules/idea-detail-dialog";
-import { mockUsers } from "@/data/user";
+import { useUsers } from "@/hooks/use-users";
+import { Loader2 } from "lucide-react";
+
+// TODO: Replace with API call - useIdeas hook
+// import { useIdeas } from "@/hooks/use-ideas";
 import { toast } from "sonner";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
@@ -31,7 +34,14 @@ function IdeasPageContent() {
   // Get view mode from URL params
   const viewMode = (searchParams.get("view") as ViewMode) || "kanban";
 
-  const [ideas, setIdeas] = useState<Idea[]>(mockIdeas);
+  // TODO: Replace with API call
+  // const { ideas, loading, error, refetch } = useIdeas();
+  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  
+  // Fetch users for assignee/createdBy
+  const { users } = useUsers({ page: 1, limit: 1000 });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -70,6 +80,8 @@ function IdeasPageContent() {
   const handleCreateIdea = (
     newIdea: Omit<Idea, "id" | "createdAt" | "updatedAt" | "comments">
   ) => {
+    // TODO: Replace with API call
+    // await createIdea(newIdea);
     const idea: Idea = {
       ...newIdea,
       id: `idea-${Date.now()}`,
@@ -114,7 +126,7 @@ function IdeasPageContent() {
   };
 
   // Get designers for assignment
-  const designers = mockUsers.filter((user) => user.role.name === "Designer");
+  const designers = users.filter((user) => user.role.name === "DESIGNER" || user.role.name === "Designer");
 
   return (
     <div className="space-y-6">
@@ -244,7 +256,7 @@ function IdeasPageContent() {
         idea={selectedIdea}
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
-        users={mockUsers}
+        users={users}
         onUpdate={handleUpdateIdea}
         onDelete={handleDeleteIdea}
         onUpdateStatus={handleUpdateIdeaStatus}

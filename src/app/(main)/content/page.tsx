@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Suspense, useRef } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,19 +14,19 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Search } from "lucide-react";
-import {
-  mockContents,
-  getPlatformLabel,
-  getContentStats,
-} from "@/data/content";
+import { useContents } from "@/hooks/use-contents";
+// TODO: Replace with API calls for designs
+// import { useDesigns } from "@/hooks/use-designs";
+import { useUsers } from "@/hooks/use-users";
 import { Content, ContentStatus } from "@/type/content";
 import { ContentTable } from "@/components/molecules/content-table";
 import { ContentDetailDialog } from "@/components/molecules/content-detail-dialog";
 import { CreateContentDialog } from "@/components/molecules/content-create-dialog";
 import { ContentCrawlDialog } from "@/components/molecules/content-crawl-dialog";
 import { AppPagination } from "@/components/molecules/pagination";
-import { mockDesigns } from "@/data/idea";
-import { mockUsers } from "@/data/user";
+import { Loader2 } from "lucide-react";
+
+import { getContentStats, getPlatformLabel } from "@/utils/content-helpers";
 import { toast } from "sonner";
 import { ITEMS_PER_PAGE } from "@/constants";
 import { getPlatformOptions } from "@/utils/platform";
@@ -37,145 +37,85 @@ import { Platform as ContentPlatform, CrawlContentInput } from "@/type/content";
 function ContentPageContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page") ?? 1);
-  const idCounterRef = useRef(mockContents.length);
 
-  const [contents, setContents] = useState<Content[]>(mockContents);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [selectedContent, setSelectedContent] = useState<Content | null>(null);
 
-  // Filter contents
-  const filteredContents = useMemo(() => {
-    return contents.filter((content) => {
-      const matchesSearch =
-        content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        content.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        content.tags.some((tag) =>
-          tag.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      const matchesStatus =
-        statusFilter === "all" || content.status === statusFilter;
-      const matchesPlatform =
-        platformFilter === "all" || content.platform === platformFilter;
-      return matchesSearch && matchesStatus && matchesPlatform;
-    });
-  }, [contents, searchQuery, statusFilter, platformFilter]);
+  // Fetch contents from API
+  const {
+    contents: apiContents,
+    loading,
+    error,
+    total,
+    createContent,
+    updateContent,
+    updateContentStatus,
+    deleteContent,
+  } = useContents({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    search: searchQuery || undefined,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    platform: platformFilter !== "all" ? platformFilter : undefined,
+  });
 
-  const totalPages = Math.ceil(filteredContents.length / ITEMS_PER_PAGE);
+  // TODO: Replace with API calls for designs
+  // const { designs } = useDesigns();
+  const [designs, setDesigns] = useState<any[]>([]);
+  const { users } = useUsers({ page: 1, limit: 1000 });
 
-  const paginatedContents = useMemo(() => {
-    return filteredContents.slice(
-      (currentPage - 1) * ITEMS_PER_PAGE,
-      currentPage * ITEMS_PER_PAGE
-    );
-  }, [filteredContents, currentPage]);
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+  const stats = getContentStats(apiContents);
 
-  const stats = getContentStats(contents);
-
-  const handleCreateContent = (
+  const handleCreateContent = async (
     newContent: Omit<Content, "id" | "createdAt" | "updatedAt">
   ) => {
-    idCounterRef.current += 1;
-    const content: Content = {
-      ...newContent,
-      id: `content-${idCounterRef.current}`,
-      createdAt: new Date().toISOString().split("T")[0],
-      updatedAt: new Date().toISOString().split("T")[0],
-    };
-    setContents((prev) => [content, ...prev]);
-    toast.success("Content created successfully");
+    await createContent(newContent);
   };
 
-  const handleUpdateStatus = (contentId: string, newStatus: ContentStatus) => {
-    setContents((prev) =>
-      prev.map((content) =>
-        content.id === contentId
-          ? {
-              ...content,
-              status: newStatus,
-              updatedAt: new Date().toISOString().split("T")[0],
-              ...(newStatus === "listed" && {
-                listedAt: new Date().toISOString().split("T")[0],
-              }),
-            }
-          : content
-      )
-    );
-    toast.success("Status updated successfully");
+  const handleUpdateStatus = async (
+    contentId: string,
+    newStatus: ContentStatus
+  ) => {
+    await updateContentStatus(contentId, newStatus);
   };
 
-  const handleUpdateContent = (updatedContent: Content) => {
-    setContents((prev) =>
-      prev.map((content) =>
-        content.id === updatedContent.id ? updatedContent : content
-      )
-    );
+  const handleUpdateContent = async (updatedContent: Content) => {
+    await updateContent(updatedContent.id, updatedContent);
     // Update selectedContent if it's the same content being updated
     setSelectedContent((prev) =>
       prev?.id === updatedContent.id ? updatedContent : prev
     );
-    toast.success("Content updated successfully");
   };
 
-  const handleDeleteContent = (contentId: string) => {
-    setContents((prev) => prev.filter((c) => c.id !== contentId));
-    toast.success("Content deleted successfully");
+  const handleDeleteContent = async (contentId: string) => {
+    await deleteContent(contentId);
+    // Clear selected content if it's the one being deleted
+    setSelectedContent((prev) => (prev?.id === contentId ? null : prev));
   };
 
-  const handleToggleAutoPost = (contentId: string, enabled: boolean) => {
-    setContents((prev) =>
-      prev.map((content) =>
-        content.id === contentId
-          ? {
-              ...content,
-              autoPostEnabled: enabled,
-              updatedAt: new Date().toISOString().split("T")[0],
-            }
-          : content
-      )
-    );
+  const handleToggleAutoPost = async (contentId: string, enabled: boolean) => {
+    await updateContent(contentId, { autoPostEnabled: enabled });
     // Update selectedContent if it's the same content being toggled
-    setSelectedContent((prev) =>
-      prev?.id === contentId
-        ? {
-            ...prev,
-            autoPostEnabled: enabled,
-            updatedAt: new Date().toISOString().split("T")[0],
-          }
-        : prev
-    );
+    if (selectedContent?.id === contentId) {
+      setSelectedContent({
+        ...selectedContent,
+        autoPostEnabled: enabled,
+      });
+    }
   };
 
   const handleCrawlContent = async (input: CrawlContentInput) => {
-    // Simulate crawling content from marketplace
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        idCounterRef.current += 1;
-        const crawledContent: Content = {
-          id: `content-${idCounterRef.current}`,
-          title: `Crawled Content from ${input.platform}`,
-          description: `Content crawled from ${input.platform} using listing ID: ${input.listingId}`,
-          status: "new",
-          platform: input.platform,
-          designId: input.designId,
-          crawledListingId: input.listingId,
-          crawledFrom: input.platform,
-          tags: [],
-          mockups: [],
-          metadata: {},
-          createdBy: mockUsers[1],
-          createdAt: new Date().toISOString().split("T")[0],
-          updatedAt: new Date().toISOString().split("T")[0],
-        };
-        setContents((prev) => [crawledContent, ...prev]);
-        resolve();
-      }, 1500);
-    });
+    // TODO: Implement API call for crawling content
+    toast.info("Content crawling feature coming soon");
   };
 
   // Get sellers for assignment
-  const sellers = mockUsers.filter((user) => user.role.name === "Seller");
+  const sellers = users.filter(
+    (user) => user.role.name === "SELLER" || user.role.name === "Seller"
+  );
 
   return (
     <section className="space-y-6">
@@ -187,12 +127,9 @@ function ContentPageContent() {
           </p>
         </div>
         <div className="flex gap-2">
-          <ContentCrawlDialog
-            designs={mockDesigns}
-            onCrawl={handleCrawlContent}
-          />
+          <ContentCrawlDialog designs={designs} onCrawl={handleCrawlContent} />
           <CreateContentDialog
-            designs={mockDesigns}
+            designs={designs}
             users={sellers}
             onSubmit={handleCreateContent}
           />
@@ -242,7 +179,7 @@ function ContentPageContent() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {contents.filter((c) => c.status === item.status).length}
+                {apiContents.filter((c) => c.status === item.status).length}
               </div>
             </CardContent>
           </Card>
@@ -256,7 +193,7 @@ function ContentPageContent() {
         ).map((platform) => {
           const count =
             platform === "other"
-              ? contents.filter((c) => c.platform === "other").length
+              ? apiContents.filter((c) => c.platform === "other").length
               : stats.byPlatform[platform] || 0;
           return (
             <Badge
@@ -348,17 +285,27 @@ function ContentPageContent() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Showing {paginatedContents.length} of {filteredContents.length} content
-        items
+        Showing {apiContents.length} of {total} content items
       </div>
 
       {/* Content Table */}
-      <ContentTable
-        contents={paginatedContents}
-        onUpdateStatus={handleUpdateStatus}
-        onDelete={handleDeleteContent}
-        onViewDetail={setSelectedContent}
-      />
+      {loading && apiContents.length === 0 ? (
+        <div className="flex items-center justify-center py-12 gap-2">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          <p className="text-muted-foreground text-sm">Loading contents...</p>
+        </div>
+      ) : error && apiContents.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 gap-2">
+          <p className="text-destructive">Error: {error}</p>
+        </div>
+      ) : (
+        <ContentTable
+          contents={apiContents}
+          onUpdateStatus={handleUpdateStatus}
+          onDelete={handleDeleteContent}
+          onViewDetail={setSelectedContent}
+        />
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -382,7 +329,11 @@ function ContentPageContent() {
 
 export default function ContentPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-12">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-12">Loading...</div>
+      }
+    >
       <ContentPageContent />
     </Suspense>
   );
