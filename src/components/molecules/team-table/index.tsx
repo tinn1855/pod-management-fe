@@ -1,6 +1,5 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,8 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SquarePen, Trash2, Users } from "lucide-react";
-import { Team, User } from "@/type/user";
+import { SquarePen, Trash2 } from "lucide-react";
+import { Team } from "@/type/user";
 import { useState } from "react";
 import { EditTeamDialog } from "../team-edit-dialog";
 import { TeamDetailDialog } from "../team-detail-dialog";
@@ -30,17 +29,11 @@ import {
 
 interface TeamsTableProps {
   teams: Team[];
-  users: User[];
-  onEdit?: (team: Team) => void;
-  onDelete?: (team: Team) => void;
+  onEdit?: (team: Team) => Promise<void>;
+  onDelete?: (team: Team) => Promise<void>;
 }
 
-export function TeamsTable({
-  teams,
-  users,
-  onEdit,
-  onDelete,
-}: TeamsTableProps) {
+export function TeamsTable({ teams, onEdit, onDelete }: TeamsTableProps) {
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [viewingTeam, setViewingTeam] = useState<Team | null>(null);
 
@@ -48,22 +41,18 @@ export function TeamsTable({
     setEditingTeam(team);
   };
 
-  const handleUpdate = (updatedTeam: Team) => {
-    onEdit?.(updatedTeam);
-    setEditingTeam(null);
+  const handleUpdate = async (updatedTeam: Team): Promise<void> => {
+    try {
+      await onEdit?.(updatedTeam);
+      setEditingTeam(null);
+    } catch (error) {
+      console.error("Error updating team:", error);
+      // Don't close dialog on error
+    }
   };
 
   const handleViewDetail = (team: Team) => {
     setViewingTeam(team);
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   return (
@@ -71,10 +60,9 @@ export function TeamsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12">#</TableHead>
+            <TableHead>#</TableHead>
             <TableHead>Team Name</TableHead>
             <TableHead>Description</TableHead>
-            <TableHead>Leader</TableHead>
             <TableHead>Members</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -91,9 +79,6 @@ export function TeamsTable({
               <TableCell>{index + 1}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Users className="h-4 w-4 text-primary" />
-                  </div>
                   <span className="font-medium">{team.name}</span>
                 </div>
               </TableCell>
@@ -101,36 +86,9 @@ export function TeamsTable({
                 {team.description || "-"}
               </TableCell>
               <TableCell>
-                {team.leader ? (
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={team.leader.avatar} alt={team.leader.name} />
-                      <AvatarFallback className="text-xs">
-                        {getInitials(team.leader.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm">{team.leader.name}</span>
-                  </div>
-                ) : (
-                  "-"
-                )}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <div className="flex -space-x-2">
-                    {team.members.slice(0, 3).map((member) => (
-                      <Avatar key={member.id} className="h-6 w-6 border-2 border-background">
-                        <AvatarImage src={member.avatar} alt={member.name} />
-                        <AvatarFallback className="text-xs">
-                          {getInitials(member.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
-                  </div>
-                  <Badge variant="secondary" className="text-xs">
-                    {team.members.length} members
-                  </Badge>
-                </div>
+                <Badge variant="secondary" className="text-xs">
+                  {team.memberCount ?? team.members?.length ?? 0} members
+                </Badge>
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {team.createdAt}
@@ -145,26 +103,34 @@ export function TeamsTable({
                       handleEdit(team);
                     }}
                   >
-                    <SquarePen size={16} />
+                    <SquarePen />
                   </Button>
                   <AlertDialog>
-                    <AlertDialogTrigger asChild onClick={(e) => e.stopPropagation()}>
-                      <Button size="icon" variant="outline" className="text-destructive">
-                        <Trash2 size={16} />
+                    <AlertDialogTrigger
+                      asChild
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="text-destructive"
+                      >
+                        <Trash2 />
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Team</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to delete &quot;{team.name}&quot;? This action
-                          cannot be undone.
+                          Are you sure you want to delete{" "}
+                          <span className="font-medium">{team.name}</span>? This
+                          action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          className="bg-destructive hover:bg-destructive/90"
                           onClick={() => onDelete?.(team)}
                         >
                           Delete
@@ -181,7 +147,6 @@ export function TeamsTable({
 
       <EditTeamDialog
         team={editingTeam || undefined}
-        users={users}
         open={!!editingTeam}
         onOpenChange={(open) => !open && setEditingTeam(null)}
         onUpdate={handleUpdate}
