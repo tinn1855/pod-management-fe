@@ -21,7 +21,7 @@ import { CategoryManagement } from "@/components/molecules/category-management";
 // Get unique categories from products
 const categories = [...new Set(mockProducts.map((p) => p.category))];
 
-export default function Products() {
+function ProductsContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page") ?? 1);
   const view = searchParams.get("view") ?? "products";
@@ -127,5 +127,13 @@ export default function Products() {
         <CategoryManagement categories={categories} />
       )}
     </section>
+  );
+}
+
+export default function Products() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-12">Loading...</div>}>
+      <ProductsContent />
+    </Suspense>
   );
 }

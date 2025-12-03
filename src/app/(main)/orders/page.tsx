@@ -76,7 +76,7 @@ function ResultsCount({ showing, total }: ResultsCountProps) {
 // MAIN PAGE
 // ============================================
 
-export default function OrdersPage() {
+function OrdersPageContent() {
   // Orders state & actions
   const {
     orders,
@@ -169,5 +169,13 @@ export default function OrdersPage() {
         onUpdateStatus={handleUpdateStatus}
       />
     </section>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-12">Loading...</div>}>
+      <OrdersPageContent />
+    </Suspense>
   );
 }

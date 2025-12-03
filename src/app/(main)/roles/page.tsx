@@ -10,7 +10,7 @@ import { CreateRoleDialog } from "@/components/molecules/role-create-dialog";
 import { Role } from "@/type/user";
 import { ITEMS_PER_PAGE } from "@/constants";
 
-export default function RolesPage() {
+function RolesPageContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page") ?? 1);
 
@@ -92,5 +92,13 @@ export default function RolesPage() {
         </Suspense>
       )}
     </section>
+  );
+}
+
+export default function RolesPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-12">Loading...</div>}>
+      <RolesPageContent />
+    </Suspense>
   );
 }

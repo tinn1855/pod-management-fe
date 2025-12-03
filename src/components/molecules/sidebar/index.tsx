@@ -52,6 +52,7 @@ import {
 import { useAuth } from "@/contexts/auth.context";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 // Sales menu (Seller)
 const salesMenuItems = [
@@ -153,7 +154,7 @@ const adminMenuItems = [
   },
 ];
 
-export function AppSidebar() {
+function AppSidebarContent() {
   const { logout } = useAuth();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -335,5 +336,13 @@ export function AppSidebar() {
 
       <SidebarRail />
     </Sidebar>
+  );
+}
+
+export function AppSidebar() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AppSidebarContent />
+    </Suspense>
   );
 }

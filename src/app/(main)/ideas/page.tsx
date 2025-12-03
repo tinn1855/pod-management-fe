@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,7 +23,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 type ViewMode = "kanban" | "list";
 
-export default function IdeasPage() {
+function IdeasPageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -250,5 +250,13 @@ export default function IdeasPage() {
         onUpdateStatus={handleUpdateIdeaStatus}
       />
     </div>
+  );
+}
+
+export default function IdeasPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-12">Loading...</div>}>
+      <IdeasPageContent />
+    </Suspense>
   );
 }

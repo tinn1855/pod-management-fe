@@ -14,13 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Users,
-  Search,
-  Plus,
-  Store as StoreIcon,
-  RefreshCw,
-} from "lucide-react";
+import { Users, Search, Plus, Store as StoreIcon } from "lucide-react";
 import {
   mockAccounts,
   mockStores,
@@ -39,12 +33,14 @@ import {
   PLATFORM_BADGE_OUTLINE_VARIANTS,
 } from "@/constants/badge-variants";
 
-export default function AccountsPage() {
+function AccountsPageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page") ?? 1);
-  const activeTab = (searchParams.get("tab") ?? "accounts") as "accounts" | "stores";
+  const activeTab = (searchParams.get("tab") ?? "accounts") as
+    | "accounts"
+    | "stores";
 
   const [accounts, setAccounts] = useState<Account[]>(mockAccounts);
   const [stores, setStores] = useState<Store[]>(mockStores);
@@ -52,18 +48,21 @@ export default function AccountsPage() {
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const setActiveTab = useCallback((tab: "accounts" | "stores") => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (tab === "accounts") {
-      params.delete("tab");
-    } else {
-      params.set("tab", tab);
-    }
-    // Reset page when switching tabs
-    params.delete("page");
-    const query = params.toString();
-    router.push(query ? `${pathname}?${query}` : pathname);
-  }, [searchParams, pathname, router]);
+  const setActiveTab = useCallback(
+    (tab: "accounts" | "stores") => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "accounts") {
+        params.delete("tab");
+      } else {
+        params.set("tab", tab);
+      }
+      // Reset page when switching tabs
+      params.delete("page");
+      const query = params.toString();
+      router.push(query ? `${pathname}?${query}` : pathname);
+    },
+    [searchParams, pathname, router]
+  );
 
   const stats = getAccountStats();
 
@@ -88,14 +87,16 @@ export default function AccountsPage() {
         store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         store.account.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesPlatform =
-        platformFilter === "all" || store.account.platform.type === platformFilter;
+        platformFilter === "all" ||
+        store.account.platform.type === platformFilter;
       const matchesStatus =
         statusFilter === "all" || store.status === statusFilter;
       return matchesSearch && matchesPlatform && matchesStatus;
     });
   }, [stores, searchQuery, platformFilter, statusFilter]);
 
-  const currentItems = activeTab === "accounts" ? filteredAccounts : filteredStores;
+  const currentItems =
+    activeTab === "accounts" ? filteredAccounts : filteredStores;
   const totalPages = Math.ceil(currentItems.length / ITEMS_PER_PAGE);
 
   const paginatedAccounts = useMemo(() => {
@@ -151,7 +152,9 @@ export default function AccountsPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Accounts</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Accounts
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -188,7 +191,9 @@ export default function AccountsPage() {
               />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.byPlatform[platform]}</div>
+              <div className="text-2xl font-bold">
+                {stats.byPlatform[platform]}
+              </div>
               <p className="text-xs text-muted-foreground">accounts</p>
             </CardContent>
           </Card>
@@ -214,7 +219,9 @@ export default function AccountsPage() {
             }
             className="cursor-pointer"
             onClick={() =>
-              setPlatformFilter(platform.type === platformFilter ? "all" : platform.type)
+              setPlatformFilter(
+                platform.type === platformFilter ? "all" : platform.type
+              )
             }
           >
             {platform.name}: {stats.byPlatform[platform.type]}
@@ -267,7 +274,10 @@ export default function AccountsPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "accounts" | "stores")}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as "accounts" | "stores")}
+      >
         <TabsList>
           <TabsTrigger value="accounts" className="gap-2">
             <Users className="h-4 w-4" />
@@ -281,7 +291,8 @@ export default function AccountsPage() {
 
         <TabsContent value="accounts" className="space-y-4">
           <div className="text-sm text-muted-foreground">
-            Showing {paginatedAccounts.length} of {filteredAccounts.length} accounts
+            Showing {paginatedAccounts.length} of {filteredAccounts.length}{" "}
+            accounts
           </div>
           <AccountTable
             accounts={paginatedAccounts}
@@ -304,7 +315,9 @@ export default function AccountsPage() {
             stores={paginatedStores}
             onEdit={(store) => toast.info(`Edit ${store.name}`)}
             onDelete={(store) => toast.info(`Delete ${store.name}`)}
-            onViewOrders={(store) => toast.info(`View orders for ${store.name}`)}
+            onViewOrders={(store) =>
+              toast.info(`View orders for ${store.name}`)
+            }
           />
         </TabsContent>
       </Tabs>
@@ -319,3 +332,14 @@ export default function AccountsPage() {
   );
 }
 
+export default function AccountsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-12">Loading...</div>
+      }
+    >
+      <AccountsPageContent />
+    </Suspense>
+  );
+}

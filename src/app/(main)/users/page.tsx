@@ -20,7 +20,7 @@ import { useRoles } from "@/hooks/use-roles";
 import { useTeams } from "@/hooks/use-teams";
 import { Loader2 } from "lucide-react";
 
-export default function UsersPage() {
+function UsersPageContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page") ?? 1);
 
@@ -250,5 +250,17 @@ export default function UsersPage() {
         </Suspense>
       )}
     </section>
+  );
+}
+
+export default function UsersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-12">Loading...</div>
+      }
+    >
+      <UsersPageContent />
+    </Suspense>
   );
 }

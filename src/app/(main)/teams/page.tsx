@@ -10,7 +10,7 @@ import { CreateTeamDialog } from "@/components/molecules/team-create-dialog";
 import { Team } from "@/type/user";
 import { ITEMS_PER_PAGE } from "@/constants";
 
-export default function TeamsPage() {
+function TeamsPageContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page") ?? 1);
 
@@ -89,5 +89,13 @@ export default function TeamsPage() {
         </Suspense>
       )}
     </section>
+  );
+}
+
+export default function TeamsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-12">Loading...</div>}>
+      <TeamsPageContent />
+    </Suspense>
   );
 }

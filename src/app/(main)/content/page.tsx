@@ -34,7 +34,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { CONTENT_PLATFORM_BADGE_OUTLINE_VARIANTS } from "@/constants/badge-variants";
 import { Platform as ContentPlatform, CrawlContentInput } from "@/type/content";
 
-export default function ContentPage() {
+function ContentPageContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page") ?? 1);
   const idCounterRef = useRef(mockContents.length);
@@ -377,5 +377,13 @@ export default function ContentPage() {
         onUpdate={handleUpdateContent}
       />
     </section>
+  );
+}
+
+export default function ContentPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-12">Loading...</div>}>
+      <ContentPageContent />
+    </Suspense>
   );
 }
