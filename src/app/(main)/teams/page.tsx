@@ -3,27 +3,37 @@
 import { Input } from "@/components/ui/input";
 import { AppPagination } from "@/components/molecules/pagination";
 import { TeamsTable } from "@/components/molecules/team-table";
-import { mockTeams, mockUsers } from "@/data/user";
 import { useState, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { CreateTeamDialog } from "@/components/molecules/team-create-dialog";
 import { Team } from "@/type/user";
 import { ITEMS_PER_PAGE } from "@/constants";
+import { useTeams } from "@/hooks/use-teams";
+import { Spinner } from "@/components/ui/spinner";
 
 function TeamsPageContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page") ?? 1);
 
-  const [teams, setTeams] = useState<Team[]>(mockTeams);
+  // Fetch teams from API with CRUD operations
+  const {
+    teams: apiTeams,
+    loading,
+    error,
+    createTeam,
+    updateTeam,
+    deleteTeam,
+  } = useTeams(true);
+
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredTeams = useMemo(() => {
-    return teams.filter(
+    return apiTeams.filter(
       (team) =>
         team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         team.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [teams, searchQuery]);
+  }, [apiTeams, searchQuery]);
 
   const totalPages = Math.ceil(filteredTeams.length / ITEMS_PER_PAGE);
 
@@ -34,33 +44,80 @@ function TeamsPageContent() {
     );
   }, [filteredTeams, currentPage]);
 
-  const handleCreate = (
+  const handleCreate = async (
     newTeam: Omit<Team, "id" | "createdAt" | "updatedAt">
-  ) => {
-    const team: Team = {
-      ...newTeam,
-      id: `team-${Date.now()}`,
-      createdAt: new Date().toISOString().split("T")[0],
-      updatedAt: new Date().toISOString().split("T")[0],
-    };
-    setTeams((prev) => [team, ...prev]);
+  ): Promise<void> => {
+    try {
+      // Extract member IDs and leader ID from the team data
+      const memberIds = newTeam.members?.map((m) => m.id) || [];
+
+      await createTeam({
+        name: newTeam.name,
+        description: newTeam.description,
+        memberIds,
+      });
+    } catch (error) {
+      console.error("Error creating team:", error);
+    }
   };
 
-  const handleEdit = (updatedTeam: Team) => {
-    setTeams((prev) =>
-      prev.map((t) => (t.id === updatedTeam.id ? updatedTeam : t))
+  const handleEdit = async (updatedTeam: Team): Promise<void> => {
+    try {
+      // Extract member IDs and leader ID from the team data
+      const memberIds = updatedTeam.members?.map((m) => m.id) || [];
+
+      await updateTeam(updatedTeam.id, {
+        name: updatedTeam.name,
+        description: updatedTeam.description,
+        memberIds,
+      });
+    } catch (error) {
+      console.error("Error updating team:", error);
+    }
+  };
+
+  const handleDelete = async (team: Team): Promise<void> => {
+    try {
+      await deleteTeam(team.id);
+    } catch (error) {
+      console.error("Error deleting team:", error);
+    }
+  };
+
+  // Loading state
+  if (loading && apiTeams.length === 0) {
+    return (
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Team Management</h1>
+        </div>
+        <div className="flex items-center justify-center py-12 gap-2">
+          <Spinner />
+          Loading teams...
+        </div>
+      </section>
     );
-  };
+  }
 
-  const handleDelete = (team: Team) => {
-    setTeams((prev) => prev.filter((t) => t.id !== team.id));
-  };
+  // Error state
+  if (error && apiTeams.length === 0) {
+    return (
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Team Management</h1>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 gap-2">
+          <p className="text-destructive">Error: {error}</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Team Management</h1>
-        <CreateTeamDialog users={mockUsers} onSubmit={handleCreate} />
+        <CreateTeamDialog onSubmit={handleCreate} />
       </div>
 
       <div className="flex gap-2">
@@ -78,7 +135,6 @@ function TeamsPageContent() {
 
       <TeamsTable
         teams={paginatedTeams}
-        users={mockUsers}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -94,7 +150,11 @@ function TeamsPageContent() {
 
 export default function TeamsPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-12">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-12">Loading...</div>
+      }
+    >
       <TeamsPageContent />
     </Suspense>
   );

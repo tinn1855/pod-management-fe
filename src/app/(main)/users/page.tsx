@@ -45,7 +45,11 @@ function UsersPageContent() {
 
   // Use API hooks - roles and teams only load when needed
   const { roles, loading: rolesLoading } = useRoles(shouldLoadRolesAndTeams);
-  const { teams, loading: teamsLoading } = useTeams(shouldLoadRolesAndTeams);
+  const {
+    teams,
+    loading: teamsLoading,
+    refetch: refetchTeams,
+  } = useTeams(shouldLoadRolesAndTeams);
   const {
     users,
     loading,
@@ -129,6 +133,11 @@ function UsersPageContent() {
   ): Promise<void> {
     try {
       await apiUpdateUser(id, userData);
+
+      // Refetch teams if teamId was changed to sync team member counts
+      if (userData.teamId !== undefined && shouldLoadRolesAndTeams) {
+        await refetchTeams();
+      }
     } catch (error) {
       console.error("Error updating user:", error);
       // Error is already handled in the hook

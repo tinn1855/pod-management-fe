@@ -36,6 +36,7 @@ export interface Team {
   description?: string;
   members: User[];
   leader?: User;
+  memberCount?: number; // Number of members in the team
   createdAt: string;
   updatedAt: string;
 }
