@@ -30,67 +30,89 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { User, Role, Team } from "@/type/user";
+import { Role, Team } from "@/type/user";
 import { userFormSchema, UserFormValues } from "@/schema/user.schema";
+import { Spinner } from "@/components/ui/spinner";
 
 interface CreateUserDialogProps {
   roles: Role[];
   teams: Team[];
-  onSubmit: (user: Omit<User, "id" | "createdAt" | "updatedAt">) => void;
+  rolesLoading?: boolean;
+  teamsLoading?: boolean;
+  onOpen?: () => void;
+  onSubmit: (user: {
+    name: string;
+    email: string;
+    password: string;
+    roleId: string;
+    teamId?: string;
+    status: "active" | "inactive" | "pending";
+  }) => Promise<void>;
 }
 
 export function CreateUserDialog({
   roles,
   teams,
+  rolesLoading = false,
+  teamsLoading = false,
+  onOpen,
   onSubmit,
 }: CreateUserDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
       name: "",
       email: "",
-      avatar: "",
+      password: "",
       roleId: "",
       teamId: undefined,
       status: "pending",
     },
   });
 
-  const handleSubmit = (values: UserFormValues) => {
-    const role = roles.find((r) => r.id === values.roleId)!;
-    const team = teams.find((t) => t.id === values.teamId);
+  async function handleSubmit(values: UserFormValues): Promise<void> {
+    try {
+      setIsSubmitting(true);
+      await onSubmit({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        roleId: values.roleId,
+        teamId: values.teamId || undefined,
+        status: values.status,
+      });
 
-    onSubmit({
-      name: values.name,
-      email: values.email,
-      avatar: values.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${values.name}`,
-      role,
-      team,
-      status: values.status,
-    });
+      form.reset();
+      setOpen(false);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
-    form.reset();
-    setOpen(false);
-  };
-
-  const handleOpenChange = (newOpen: boolean) => {
+  function handleOpenChange(newOpen: boolean): void {
     setOpen(newOpen);
+    if (newOpen && onOpen) {
+      onOpen();
+    }
     if (!newOpen) {
       form.reset();
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
+          <Plus />
+          Create User
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Create New User</DialogTitle>
           <DialogDescription>
@@ -98,7 +120,10 @@ export function CreateUserDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -129,28 +154,61 @@ export function CreateUserDialog({
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Enter password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="grid grid-cols-3 gap-4 items-start">
               <FormField
                 control={form.control}
                 name="roleId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-2">
                     <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select role" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.id}>
-                            {role.name}
-                          </SelectItem>
-                        ))}
+                        {rolesLoading ? (
+                          <div className="flex items-center justify-center py-4">
+                            <Spinner />
+                          </div>
+                        ) : roles.length === 0 ? (
+                          <div className="py-4 text-center text-sm text-muted-foreground">
+                            No roles available
+                          </div>
+                        ) : (
+                          roles.map((role) => (
+                            <SelectItem
+                              key={role.id || role.name}
+                              value={role.id}
+                            >
+                              {role.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="min-h-[20px]" />
                   </FormItem>
                 )}
               />
@@ -158,58 +216,99 @@ export function CreateUserDialog({
                 control={form.control}
                 name="teamId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-2">
                     <FormLabel>Team (Optional)</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(value === "none" ? undefined : value)} 
-                      defaultValue={field.value || "none"}
+                    <Select
+                      onValueChange={(value) =>
+                        field.onChange(value === "none" ? undefined : value)
+                      }
+                      value={field.value || "none"}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select team" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="none">No Team</SelectItem>
-                        {teams.map((team) => (
-                          <SelectItem key={team.id} value={team.id}>
-                            {team.name}
-                          </SelectItem>
-                        ))}
+                        {teamsLoading ? (
+                          <div className="flex items-center justify-center py-4">
+                            <Spinner />
+                          </div>
+                        ) : teams.length === 0 ? (
+                          <div className="py-4 text-center text-sm text-muted-foreground">
+                            No teams available
+                          </div>
+                        ) : (
+                          teams.map((team) => (
+                            <SelectItem
+                              key={team.id || team.name}
+                              value={team.id}
+                            >
+                              {team.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="min-h-[20px]" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || "pending"}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="min-h-[20px]" />
                   </FormItem>
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
-              <Button type="submit">Create User</Button>
+              <Button
+                type="submit"
+                disabled={
+                  isSubmitting ||
+                  rolesLoading ||
+                  teamsLoading ||
+                  roles.length === 0
+                }
+              >
+                {isSubmitting ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create User"
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
