@@ -17,7 +17,9 @@ import { Product } from "@/type/product";
 import { ITEMS_PER_PAGE } from "@/constants";
 import { CategoryManagement } from "@/components/molecules/category-management";
 import { useProducts } from "@/hooks/use-products";
-import { Loader2 } from "lucide-react";
+import { REVERSE_CATEGORY_MAP } from "@/hooks/use-product-form";
+import { Spinner } from "@/components/ui/spinner";
+import { ProductInput } from "@/schema";
 
 function ProductsContent() {
   const searchParams = useSearchParams();
@@ -34,6 +36,7 @@ function ProductsContent() {
     loading,
     error,
     total,
+    createProduct,
     updateProduct,
     deleteProduct,
   } = useProducts({
@@ -46,10 +49,20 @@ function ProductsContent() {
 
   // Get unique categories from products
   const categories = useMemo(() => {
-    return [...new Set(apiProducts.map((p) => p.category))];
+    const uniqueCategoryIds = [
+      ...new Set(apiProducts.map((p) => p.categoryId)),
+    ];
+    return uniqueCategoryIds.map((id) => ({
+      id: String(id),
+      name: REVERSE_CATEGORY_MAP[id] || `Category ${id}`,
+    }));
   }, [apiProducts]);
 
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+
+  const handleCreate = async (data: ProductInput) => {
+    await createProduct(data);
+  };
 
   const handleEdit = async (updatedProduct: Product) => {
     await updateProduct(updatedProduct.id, updatedProduct);
@@ -59,7 +72,6 @@ function ProductsContent() {
     await deleteProduct(product.id);
   };
 
-  // Loading state
   if (loading && apiProducts.length === 0) {
     return (
       <section className="space-y-6">
@@ -67,14 +79,12 @@ function ProductsContent() {
           <h1 className="text-2xl font-bold">Product Management</h1>
         </div>
         <div className="flex items-center justify-center py-12 gap-2">
-          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          <p className="text-muted-foreground text-sm">Loading products...</p>
+          <Spinner /> Loading products...
         </div>
       </section>
     );
   }
 
-  // Error state
   if (error && apiProducts.length === 0) {
     return (
       <section className="space-y-6">
@@ -94,7 +104,7 @@ function ProductsContent() {
         <>
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Product Management</h1>
-            <CreateProductDialog />
+            <CreateProductDialog onCreate={handleCreate} />
           </div>
 
           <div className="flex gap-2 flex-wrap">
@@ -111,8 +121,8 @@ function ProductsContent() {
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -147,7 +157,7 @@ function ProductsContent() {
           )}
         </>
       ) : (
-        <CategoryManagement categories={categories} />
+        <CategoryManagement categories={categories.map((c) => c.name)} />
       )}
     </section>
   );
@@ -155,7 +165,13 @@ function ProductsContent() {
 
 export default function Products() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-12">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-12">
+          <Spinner /> Loading...
+        </div>
+      }
+    >
       <ProductsContent />
     </Suspense>
   );

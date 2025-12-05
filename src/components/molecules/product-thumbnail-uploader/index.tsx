@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { UploadCloud, X } from "lucide-react";
+import { UploadCloud, X, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ export function ProductThumbnailUploader({
   thumbnail,
   onUpload,
   onClear,
+  isUploading,
 }: ProductThumbnailUploaderProps) {
   return (
     <div className="space-y-2">
@@ -31,13 +32,20 @@ export function ProductThumbnailUploader({
           </Button>
         </div>
       ) : (
-        <Label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed cursor-pointer hover:bg-muted/20 transition">
-          <UploadCloud size={32} className="text-muted-foreground" />
-          <p className="mt-2 text-muted-foreground">Click to upload</p>
+        <Label className={`flex flex-col items-center justify-center w-full h-64 border-2 border-dashed transition ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-muted/20'}`}>
+          {isUploading ? (
+            <Loader2 size={32} className="animate-spin text-muted-foreground" />
+          ) : (
+            <>
+              <UploadCloud size={32} className="text-muted-foreground" />
+              <p className="mt-2 text-muted-foreground">Click to upload</p>
+            </>
+          )}
           <Input
             type="file"
             accept="image/*"
             className="hidden"
+            disabled={isUploading}
             onChange={(e) => onUpload(e.target.files?.[0])}
           />
         </Label>

@@ -166,7 +166,7 @@ export function ContentTable({
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreHorizontal className="h-4 w-4" />
+                    <MoreHorizontal />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -174,7 +174,7 @@ export function ContentTable({
                   onClick={(e) => e.stopPropagation()}
                 >
                   <DropdownMenuItem onClick={() => onViewDetail(content)}>
-                    <Eye className="h-4 w-4 mr-2" />
+                    <Eye />
                     View Details
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

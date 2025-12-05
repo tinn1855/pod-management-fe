@@ -62,56 +62,62 @@ const normalizeDate = (dateValue: any): string => {
 
 // Normalize product from API response
 const normalizeProduct = (product: any): Product => {
-  // Normalize category
-  const category = normalizeCategory(product.category);
+  // Normalize categoryId
+  let categoryId = 1; // Default
+  if (typeof product.categoryId === "number") {
+    categoryId = product.categoryId;
+  } else if (product.category && typeof product.category === "object" && product.category.id) {
+    categoryId = Number(product.category.id);
+  } else if (typeof product.category === "number") {
+    categoryId = product.category;
+  } else if (product.category && !isNaN(Number(product.category))) {
+    categoryId = Number(product.category);
+  }
 
   // Normalize updatedAt
   const updatedAt = normalizeDate(product.updatedAt || product.updated_at);
 
-  // Normalize thumbnail (ensure it's not empty string)
-  const thumbnail = product.thumbnail || product.image || "";
+  // Normalize images
+  let images: string[] = [];
+  if (Array.isArray(product.images)) {
+    images = product.images.map((img: any) => {
+      if (typeof img === "string") return img;
+      return img.url || "";
+    }).filter(Boolean);
+  } else if (product.thumbnail) {
+    images = [product.thumbnail];
+  }
+
+  // Normalize variations
+  const variations = {
+    sizes: Array.isArray(product.variations?.sizes) 
+      ? product.variations.sizes 
+      : Array.isArray(product.sizes) ? product.sizes : [],
+    colors: Array.isArray(product.variations?.colors) 
+      ? product.variations.colors 
+      : Array.isArray(product.colors) ? product.colors : [],
+  };
+
+  // Normalize mockups
+  let mockups: string[] = [];
+  if (Array.isArray(product.mockups)) {
+    mockups = product.mockups.map((m: any) => {
+      if (typeof m === "string") return m;
+      return m.url || "";
+    }).filter(Boolean);
+  }
 
   return {
     id: String(product.id || product._id || ""),
-    thumbnail,
     name: product.name || "",
-    sku: product.sku || undefined,
-    category,
-    sizes: Array.isArray(product.sizes) ? product.sizes : [],
-    colors: Array.isArray(product.colors) ? product.colors : [],
+    description: product.description || "",
+    categoryId,
     price: Number(product.price) || 0,
-    variants: Array.isArray(product.variants)
-      ? product.variants.map((v: any) => ({
-          id: String(v.id || ""),
-          size: v.size || "",
-          color: v.color || "",
-          price: Number(v.price) || 0,
-          stock: v.stock !== undefined ? Number(v.stock) : undefined,
-        }))
-      : undefined,
-    images: Array.isArray(product.images)
-      ? product.images.map((img: any) => ({
-          id: String(img.id || ""),
-          url: img.url || "",
-          alt: img.alt || undefined,
-          isPrimary: img.isPrimary || false,
-        }))
-      : undefined,
-    mockups: Array.isArray(product.mockups)
-      ? product.mockups.map((m: any) => ({
-          id: String(m.id || ""),
-          url: m.url || "",
-          name: m.name || "",
-          type: m.type || undefined,
-        }))
-      : undefined,
-    status:
-      (product.status?.toLowerCase() as
-        | "in stock"
-        | "out of stock"
-        | "discontinued") || "in stock",
+    images,
+    variations,
+    mockups,
+    isActive: product.isActive !== undefined ? product.isActive : (product.status === "in stock"),
     updatedAt,
-    description: product.description || undefined,
   };
 };
 
@@ -159,7 +165,11 @@ export const productsService = {
     let productsArray: Product[] = [];
     let total = 0;
 
-    if (data.data && Array.isArray(data.data)) {
+    // Check for the meta format first (e.g. { data: [...], meta: { total: 15, ... } })
+    if (data.meta && data.data && Array.isArray(data.data)) {
+      productsArray = data.data.map(normalizeProduct);
+      total = data.meta.total || productsArray.length;
+    } else if (data.data && Array.isArray(data.data)) {
       productsArray = data.data.map(normalizeProduct);
       total =
         data.total || data.count || data.totalCount || productsArray.length;
@@ -175,8 +185,8 @@ export const productsService = {
     return {
       data: productsArray,
       total,
-      page: data.page || params?.page || 1,
-      limit: data.limit || params?.limit || 10,
+      page: data.meta?.page || data.page || params?.page || 1,
+      limit: data.meta?.limit || data.limit || params?.limit || 10,
     };
   },
 
@@ -200,16 +210,10 @@ export const productsService = {
 
   // Create product
   create: async (productData: Partial<Product>): Promise<Product> => {
-    // Prepare data for API - ensure category is string
-    const apiData = {
-      ...productData,
-      category: normalizeCategory(productData.category),
-    };
-
     const response = await fetch(`${API_BASE_URL}/products`, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify(apiData),
+      body: JSON.stringify(productData),
     });
 
     if (!response.ok) {
@@ -228,16 +232,13 @@ export const productsService = {
     id: string,
     productData: Partial<Product>
   ): Promise<Product> => {
-    // Prepare data for API - ensure category is string if provided
-    const apiData: Partial<Product> = { ...productData };
-    if (productData.category !== undefined) {
-      apiData.category = normalizeCategory(productData.category);
-    }
+    // Remove id and updatedAt from payload
+    const { id: _, updatedAt: __, ...cleanData } = productData;
 
     const response = await fetch(`${API_BASE_URL}/products/${id}`, {
       method: "PATCH",
       headers: getAuthHeaders(),
-      body: JSON.stringify(apiData),
+      body: JSON.stringify(cleanData),
     });
 
     if (!response.ok) {
