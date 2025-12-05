@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Product } from "@/type/product";
 import Image from "next/image";
+import { ProductImage } from "@/components/atoms/product-image";
 import { formatCurrency } from "@/constants";
 import { REVERSE_CATEGORY_MAP } from "@/hooks/use-product-form";
 
@@ -44,16 +45,12 @@ export function ProductDetailDialog({
           <div className="flex gap-6">
             <div className="shrink-0">
               <div className="aspect-square min-w-48 rounded-lg overflow-hidden border relative">
-                {product.images?.[0] ? (
-                  <Image
-                    src={product.images[0]}
-                    fill
-                    alt={product.name}
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">No Image</div>
-                )}
+                <ProductImage
+                  src={product.images?.[0]}
+                  fill
+                  alt={product.name}
+                  className="object-cover"
+                />
               </div>
             </div>
 

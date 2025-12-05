@@ -169,7 +169,7 @@ function AppSidebarContent() {
     return pathname.startsWith("/products");
   };
 
-  const isSubItemActive = (item: typeof productsSubItems[0]) => {
+  const isSubItemActive = (item: (typeof productsSubItems)[0]) => {
     if (!isProductPageActive()) return false;
     const view = searchParams.get("view");
     if (item.query.includes("view=products")) {
@@ -241,7 +241,7 @@ function AppSidebarContent() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              
+
               {/* Products - Expandable */}
               <SidebarMenuItem>
                 <SidebarMenuButton
@@ -313,10 +313,7 @@ function AppSidebarContent() {
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                className="w-[--radix-popper-anchor-width]"
-              >
+              <DropdownMenuContent side="top">
                 <DropdownMenuItem>
                   <span>Account</span>
                 </DropdownMenuItem>
@@ -325,7 +322,7 @@ function AppSidebarContent() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
-                  <LogOut className="mr-2 size-4" />
+                  <LogOut />
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

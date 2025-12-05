@@ -30,11 +30,13 @@ function ProductsContent() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  const isProductView = view === "products";
+
   // Fetch products from API
   const {
     products: apiProducts,
-    loading,
-    error,
+    loading: productsLoading,
+    error: productsError,
     total,
     createProduct,
     updateProduct,
@@ -45,9 +47,11 @@ function ProductsContent() {
     search: searchQuery || undefined,
     category: categoryFilter !== "all" ? categoryFilter : undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
+    enabled: isProductView,
   });
 
-  // Get unique categories from products
+  // Get unique categories from products (for filter dropdown)
+  // We should ideally fetch this from categories API too if needed for filter
   const categories = useMemo(() => {
     const uniqueCategoryIds = [
       ...new Set(apiProducts.map((p) => p.categoryId)),
@@ -72,7 +76,7 @@ function ProductsContent() {
     await deleteProduct(product.id);
   };
 
-  if (loading && apiProducts.length === 0) {
+  if (isProductView && productsLoading && apiProducts.length === 0) {
     return (
       <section className="space-y-6">
         <div className="flex items-center justify-between">
@@ -85,14 +89,14 @@ function ProductsContent() {
     );
   }
 
-  if (error && apiProducts.length === 0) {
+  if (isProductView && productsError && apiProducts.length === 0) {
     return (
       <section className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Product Management</h1>
         </div>
         <div className="flex flex-col items-center justify-center py-12 gap-2">
-          <p className="text-destructive">Error: {error}</p>
+          <p className="text-destructive">Error: {productsError}</p>
         </div>
       </section>
     );
@@ -100,7 +104,7 @@ function ProductsContent() {
 
   return (
     <section className="space-y-6">
-      {view === "products" ? (
+      {isProductView ? (
         <>
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Product Management</h1>
@@ -157,7 +161,7 @@ function ProductsContent() {
           )}
         </>
       ) : (
-        <CategoryManagement categories={categories.map((c) => c.name)} />
+        <CategoryManagement />
       )}
     </section>
   );
