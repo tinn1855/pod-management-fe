@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Content, ContentStatus } from "@/type/content";
-import { getStatusLabel, getPlatformLabel } from "@/data/content";
+import { getStatusLabel, getPlatformLabel } from "@/utils/content-helpers";
 import {
   CONTENT_STATUS_BADGE_OUTLINE_VARIANTS,
   CONTENT_PLATFORM_BADGE_OUTLINE_VARIANTS,
@@ -491,7 +491,11 @@ export function ContentDetailDialog({
                 <div>
                   <Label>Keywords (comma separated)</Label>
                   <Input
-                    value={editMetadata.keywords?.join(", ") || ""}
+                    value={
+                      Array.isArray(editMetadata.keywords)
+                        ? editMetadata.keywords.join(", ")
+                        : ""
+                    }
                     onChange={(e) =>
                       setEditMetadata({
                         ...editMetadata,
@@ -759,7 +763,9 @@ export function ContentDetailDialog({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground">Created By</p>
-              <p className="font-medium">{content.createdBy.name}</p>
+              <p className="font-medium">
+                {content.createdBy?.name || "Unknown"}
+              </p>
             </div>
             <div>
               <p className="text-muted-foreground">Created At</p>
@@ -768,7 +774,9 @@ export function ContentDetailDialog({
             {content.assignedTo && (
               <div>
                 <p className="text-muted-foreground">Assigned To</p>
-                <p className="font-medium">{content.assignedTo.name}</p>
+                <p className="font-medium">
+                  {content.assignedTo?.name || "Unknown"}
+                </p>
               </div>
             )}
             <div>

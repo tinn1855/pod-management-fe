@@ -22,14 +22,17 @@ import {
   PenTool,
 } from "lucide-react";
 import { useState } from "react";
-import { mockUsers } from "@/data/user";
+import { useUsers } from "@/hooks/use-users";
 import { ACTIVITY_TYPE_BADGE_OUTLINE_VARIANTS } from "@/constants/badge-variants";
 
-// Mock activity logs
+// TODO: Replace with API call
+// const { logs, loading } = useActivityLogs();
+const mockLogs: any[] = [];
+/* Mock data - removed:
 const mockLogs = [
   {
     id: "log-1",
-    user: mockUsers[1],
+    user: users[1],
     action: "create",
     module: "orders",
     description: "Created new order ORD-2024-008",
@@ -99,7 +102,7 @@ const mockLogs = [
     timestamp: "2024-01-20T15:30:00Z",
     metadata: { roleId: "role-designer" },
   },
-];
+]; */
 
 const actionLabels: Record<string, string> = {
   create: "Created",

@@ -30,7 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Content, ContentMockup, Platform } from "@/type/content";
 import { Design } from "@/type/idea";
 import { User } from "@/type/user";
-import { mockUsers } from "@/data/user";
+import { useUsers } from "@/hooks/use-users";
 import { toast } from "sonner";
 import { contentFormSchema, ContentFormValues } from "@/schema/content.schema";
 import { PLATFORM_OPTIONS } from "@/utils/platform";
@@ -69,7 +69,13 @@ export function CreateContentDialog({
   });
 
   const handleSubmit = (values: ContentFormValues) => {
-    const createdBy = mockUsers[1]; // Current user (Seller)
+    // TODO: Get current user from auth context
+    const createdBy = users && users.length > 0 ? users[0] : undefined;
+
+    if (!createdBy) {
+      toast.error("No user found. Please login again.");
+      return;
+    }
 
     const tags = values.tags
       .split(",")

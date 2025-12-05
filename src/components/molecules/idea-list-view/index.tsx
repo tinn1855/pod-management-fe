@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Idea, IdeaStatus } from "@/type/idea";
-import { getStatusLabel } from "@/data/idea";
+import { getStatusLabel } from "@/utils/idea-helpers";
 import {
   IDEA_STATUS_BADGE_OUTLINE_VARIANTS,
   PRIORITY_BADGE_OUTLINE_VARIANTS,

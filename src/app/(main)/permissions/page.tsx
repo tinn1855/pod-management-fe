@@ -27,7 +27,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { mockPermissionModules, mockRoles, mockPermissions } from "@/data/user";
+import { useRoles } from "@/hooks/use-roles";
+// TODO: Replace with API calls for permissions
+// import { usePermissions } from "@/hooks/use-permissions";
 import { Role, Permission, PermissionModule } from "@/type/user";
 import { Check, Shield, X, Save } from "lucide-react";
 import { useState } from "react";
@@ -37,11 +39,15 @@ import { getColorClasses } from "@/constants";
 import { cn } from "@/lib/utils";
 
 export default function PermissionsPage() {
-  const [roles, setRoles] = useState<Role[]>(mockRoles);
+  // TODO: Replace with API call
+  const { roles: apiRoles } = useRoles(true);
+  const [roles, setRoles] = useState<Role[]>(apiRoles);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
 
+  // TODO: Replace with API call for permission modules
+  const mockPermissionModules: PermissionModule[] = [];
   const filteredModules = mockPermissionModules.filter(
     (module) =>
       module.module.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -10,28 +10,36 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
 import { useProductForm } from "@/hooks/use-product-form";
-import { useThumbnailUploader } from "@/hooks/use-thumbnail-uploader";
 import { ProductForm } from "../product-form";
+import { ProductInput } from "@/schema/product.schema";
+import { toast } from "sonner";
 
-export function CreateProductDialog() {
+interface CreateProductDialogProps {
+  onCreate: (data: ProductInput) => Promise<void>;
+}
+
+export function CreateProductDialog({ onCreate }: CreateProductDialogProps) {
   const [open, setOpen] = useState(false);
   const form = useProductForm();
-  const { thumbnail, upload, reset } = useThumbnailUploader();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    if (!thumbnail) return toast.error("Please upload a thumbnail.");
-
-    toast.success("Product created!");
-    form.reset();
-    reset();
-    setOpen(false);
+  const handleSubmit = async (data: ProductInput) => {
+    try {
+      setIsSubmitting(true);
+      await onCreate(data);
+      form.reset();
+      setOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create product");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
     form.reset();
-    reset();
     setOpen(false);
   };
 
@@ -39,7 +47,6 @@ export function CreateProductDialog() {
     setOpen(newOpen);
     if (!newOpen) {
       form.reset();
-      reset();
     }
   };
 
@@ -47,23 +54,21 @@ export function CreateProductDialog() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus />
           New Product
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="min-w-4xl p-0 rounded-2xl shadow-xl">
+      <DialogContent className="min-w-4xl p-0 rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="px-8 py-6 border-b">
           <DialogTitle>Create Product</DialogTitle>
         </DialogHeader>
 
         <ProductForm
           form={form}
-          thumbnail={thumbnail}
-          onThumbnailUpload={upload}
-          onThumbnailClear={reset}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
+          isLoading={isSubmitting}
         />
       </DialogContent>
     </Dialog>

@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { Order, OrderStatus } from "@/type/order";
 import { PlatformType } from "@/type/platform";
-import { getOrderStats, getPlatformLabel } from "@/data/order";
+import { getOrderStats, getPlatformLabel } from "@/utils/order-helpers";
 import { toast } from "sonner";
 
 export interface UseOrdersReturn {

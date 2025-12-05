@@ -24,7 +24,7 @@ import {
   VirtualizedColumnProps,
   IdeaKanbanBoardProps,
 } from "@/type/kanban";
-import { getIdeasByStatus, getStatusLabel } from "@/data/idea";
+import { getIdeasByStatus, getStatusLabel } from "@/utils/idea-helpers";
 import {
   IDEA_STATUS_BADGE_OUTLINE_VARIANTS,
   PRIORITY_BADGE_OUTLINE_VARIANTS,

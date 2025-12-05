@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Product } from "@/type/product";
 import Image from "next/image";
 import { formatCurrency } from "@/constants";
+import { REVERSE_CATEGORY_MAP } from "@/hooks/use-product-form";
 
 interface ProductDetailDialogProps {
   product: Product | null;
@@ -42,42 +43,30 @@ export function ProductDetailDialog({
           {/* Thumbnail và thông tin cơ bản */}
           <div className="flex gap-6">
             <div className="shrink-0">
-              <div className="aspect-square min-w-48 rounded-lg overflow-hidden border">
-                <Image
-                  src={product.thumbnail}
-                  width={128}
-                  height={128}
-                  alt={product.name}
-                  className="object-cover w-full h-full"
-                />
+              <div className="aspect-square min-w-48 rounded-lg overflow-hidden border relative">
+                {product.images?.[0] ? (
+                  <Image
+                    src={product.images[0]}
+                    fill
+                    alt={product.name}
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">No Image</div>
+                )}
               </div>
             </div>
 
             <div className="flex-1 space-y-3">
               <div>
                 <h3 className="text-lg font-semibold">{product.name}</h3>
-                {product.sku && (
-                  <p className="text-sm text-muted-foreground">
-                    SKU: {product.sku}
-                  </p>
-                )}
               </div>
 
               <div className="flex items-center gap-4">
                 <Badge
-                  variant={
-                    product.status === "in stock"
-                      ? "default"
-                      : product.status === "out of stock"
-                      ? "secondary"
-                      : "destructive"
-                  }
+                  variant={product.isActive ? "default" : "destructive"}
                 >
-                  {product.status === "in stock"
-                    ? "In Stock"
-                    : product.status === "out of stock"
-                    ? "Out of Stock"
-                    : "Discontinued"}
+                  {product.isActive ? "Active" : "Inactive"}
                 </Badge>
                 <span className="text-2xl font-bold text-green-600">
                   {formatCurrency(product.price)}
@@ -86,7 +75,7 @@ export function ProductDetailDialog({
 
               <div>
                 <span className="text-sm font-medium">Category:</span>
-                <span className="ml-2 text-sm">{product.category}</span>
+                <span className="ml-2 text-sm">{REVERSE_CATEGORY_MAP[product.categoryId] || product.categoryId}</span>
               </div>
             </div>
           </div>
@@ -106,10 +95,10 @@ export function ProductDetailDialog({
           {/* Sizes */}
           <div>
             <h4 className="font-semibold mb-2">
-              Sizes ({product.sizes.length})
+              Sizes ({product.variations?.sizes?.length || 0})
             </h4>
             <div className="flex flex-wrap gap-2">
-              {product.sizes.map((size) => (
+              {product.variations?.sizes?.map((size) => (
                 <Badge key={size} variant="outline">
                   {size}
                 </Badge>
@@ -120,10 +109,10 @@ export function ProductDetailDialog({
           {/* Colors */}
           <div>
             <h4 className="font-semibold mb-2">
-              Colors ({product.colors.length})
+              Colors ({product.variations?.colors?.length || 0})
             </h4>
             <div className="flex flex-wrap gap-2">
-              {product.colors.map((color) => (
+              {product.variations?.colors?.map((color) => (
                 <Badge key={color} variant="outline">
                   {color}
                 </Badge>

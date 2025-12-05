@@ -1,12 +1,12 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 
-// Data
-import { mockOrders } from "@/data/order";
-import { mockStores, mockAccounts, mockPlatforms } from "@/data/platform";
+// TODO: Replace with API calls
+// import { useOrders } from "@/hooks/use-orders";
+// import { usePlatforms, useStores, useAccounts } from "@/hooks/use-platforms";
 
 // Hooks
 import { useOrders } from "@/hooks/use-orders";
@@ -77,15 +77,26 @@ function ResultsCount({ showing, total }: ResultsCountProps) {
 // ============================================
 
 function OrdersPageContent() {
+  // TODO: Replace with API calls
+  // const { orders, loading, error } = useOrders({ page: currentPage });
+  // const { accounts } = useAccounts();
+  // const { stores } = useStores();
+  // const { platforms } = usePlatforms();
+  
+  const [orders, setOrders] = useState<any[]>([]);
+  const [mockAccounts, setMockAccounts] = useState<any[]>([]);
+  const [mockStores, setMockStores] = useState<any[]>([]);
+  const [mockPlatforms, setMockPlatforms] = useState<any[]>([]);
+  
   // Orders state & actions
   const {
-    orders,
+    orders: ordersList,
     selectedOrder,
     stats,
     setSelectedOrder,
     handleUpdateStatus,
     handleSyncOrders,
-  } = useOrders(mockOrders);
+  } = useOrders(orders);
 
   // Filters state & logic
   const {
@@ -100,7 +111,7 @@ function OrdersPageContent() {
     totalPages,
     filteredAccounts,
     filteredStores,
-  } = useOrderFilters(orders, mockAccounts, mockStores);
+  } = useOrderFilters(ordersList, mockAccounts, mockStores);
 
   return (
     <section className="space-y-6">

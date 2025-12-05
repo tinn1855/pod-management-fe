@@ -16,6 +16,7 @@ import { DeleteConfirmDialog } from "../product-delete-confirm-dialog";
 import { ProductDetailDialog } from "../product-detail-dialog";
 import { useState } from "react";
 import { formatCurrency } from "@/constants";
+import { REVERSE_CATEGORY_MAP } from "@/hooks/use-product-form";
 
 interface ProductsTableProps {
   products: Product[];
@@ -55,7 +56,7 @@ export function ProductsTable({
             <TableHead>Category</TableHead>
             <TableHead>Sizes</TableHead>
             <TableHead>Colors</TableHead>
-            <TableHead>Price Range</TableHead>
+            <TableHead>Price</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Updated At</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -71,41 +72,40 @@ export function ProductsTable({
             >
               <TableCell>{index + 1}</TableCell>
               <TableCell>
-                <div className="w-12 h-12 rounded-md overflow-hidden border">
-                  <Image
-                    src={`${product.thumbnail}`}
-                    width={48}
-                    height={48}
-                    alt={product.name}
-                    className="object-cover"
-                  />
+                <div className="aspect-square w-14 rounded-md overflow-hidden border bg-muted relative">
+                  {product.images?.[0] ? (
+                    <Image
+                      src={product.images[0]}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                      sizes="48px"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                      No img
+                    </div>
+                  )}
                 </div>
               </TableCell>
 
               <TableCell className="font-semibold">
                 <div>{product.name}</div>
-                {product.sku && (
-                  <span className="text-xs text-muted-foreground">
-                    {product.sku}
-                  </span>
-                )}
               </TableCell>
 
-              <TableCell>{product.category}</TableCell>
-              <TableCell>{product.sizes.length} sizes</TableCell>
-              <TableCell>{product.colors.length} colors</TableCell>
+              <TableCell>
+                {REVERSE_CATEGORY_MAP[product.categoryId] || product.categoryId}
+              </TableCell>
+              <TableCell>
+                {product.variations?.sizes?.length || 0} sizes
+              </TableCell>
+              <TableCell>
+                {product.variations?.colors?.length || 0} colors
+              </TableCell>
               <TableCell>{formatCurrency(product.price)}</TableCell>
               <TableCell>
-                <Badge
-                  variant={
-                    product.status === "in stock"
-                      ? "success"
-                      : product.status === "out of stock"
-                      ? "outline"
-                      : "destructive"
-                  }
-                >
-                  {product.status}
+                <Badge variant={product.isActive ? "success" : "destructive"}>
+                  {product.isActive ? "Active" : "Inactive"}
                 </Badge>
               </TableCell>
 

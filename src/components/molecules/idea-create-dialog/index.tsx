@@ -33,7 +33,8 @@ import { CalendarIcon, Plus, X, Upload } from "lucide-react";
 import { useState } from "react";
 import { Idea, PRIORITY_ORDER } from "@/type/idea";
 import { User } from "@/type/user";
-import { mockUsers } from "@/data/user";
+import { useUsers } from "@/hooks/use-users";
+import { toast } from "sonner";
 import { IdeaFormValues } from "@/schema/idea.schema";
 import { getPriorityLabel, getInitials } from "@/utils/format";
 import { useIdeaForm } from "@/hooks/use-idea-form";
@@ -67,7 +68,13 @@ export function CreateIdeaDialog({
 
   const handleSubmit = (values: IdeaFormValues) => {
     const assignee = designers.find((d) => d.id === values.assigneeId);
-    const createdBy = mockUsers[1]; // Current user (Seller)
+    // TODO: Get current user from auth context
+    const createdBy = designers && designers.length > 0 ? designers[0] : undefined;
+    
+    if (!createdBy) {
+      toast.error("No user found. Please login again.");
+      return;
+    }
 
     const tags = values.tags
       .split(",")

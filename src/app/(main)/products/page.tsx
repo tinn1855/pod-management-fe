@@ -10,59 +10,93 @@ import {
 } from "@/components/ui/select";
 import { AppPagination } from "@/components/molecules/pagination";
 import { ProductsTable } from "@/components/molecules/product-table";
-import { mockProducts } from "@/data/product";
 import { useState, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { CreateProductDialog } from "@/components/molecules/product-create-dialog";
 import { Product } from "@/type/product";
 import { ITEMS_PER_PAGE } from "@/constants";
 import { CategoryManagement } from "@/components/molecules/category-management";
-
-// Get unique categories from products
-const categories = [...new Set(mockProducts.map((p) => p.category))];
+import { useProducts } from "@/hooks/use-products";
+import { REVERSE_CATEGORY_MAP } from "@/hooks/use-product-form";
+import { Spinner } from "@/components/ui/spinner";
+import { ProductInput } from "@/schema";
 
 function ProductsContent() {
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page") ?? 1);
   const view = searchParams.get("view") ?? "products";
 
-  const [products, setProducts] = useState<Product[]>(mockProducts);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (product.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ??
-          false);
-      const matchesCategory =
-        categoryFilter === "all" || product.category === categoryFilter;
-      const matchesStatus =
-        statusFilter === "all" || product.status === statusFilter;
-      return matchesSearch && matchesCategory && matchesStatus;
-    });
-  }, [products, searchQuery, categoryFilter, statusFilter]);
+  // Fetch products from API
+  const {
+    products: apiProducts,
+    loading,
+    error,
+    total,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+  } = useProducts({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    search: searchQuery || undefined,
+    category: categoryFilter !== "all" ? categoryFilter : undefined,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+  });
 
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  // Get unique categories from products
+  const categories = useMemo(() => {
+    const uniqueCategoryIds = [
+      ...new Set(apiProducts.map((p) => p.categoryId)),
+    ];
+    return uniqueCategoryIds.map((id) => ({
+      id: String(id),
+      name: REVERSE_CATEGORY_MAP[id] || `Category ${id}`,
+    }));
+  }, [apiProducts]);
 
-  const paginatedProducts = useMemo(() => {
-    return filteredProducts.slice(
-      (currentPage - 1) * ITEMS_PER_PAGE,
-      currentPage * ITEMS_PER_PAGE
-    );
-  }, [filteredProducts, currentPage]);
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
-  const handleEdit = (updatedProduct: Product) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
-    );
+  const handleCreate = async (data: ProductInput) => {
+    await createProduct(data);
   };
 
-  const handleDelete = (product: Product) => {
-    setProducts((prev) => prev.filter((p) => p.id !== product.id));
+  const handleEdit = async (updatedProduct: Product) => {
+    await updateProduct(updatedProduct.id, updatedProduct);
   };
+
+  const handleDelete = async (product: Product) => {
+    await deleteProduct(product.id);
+  };
+
+  if (loading && apiProducts.length === 0) {
+    return (
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Product Management</h1>
+        </div>
+        <div className="flex items-center justify-center py-12 gap-2">
+          <Spinner /> Loading products...
+        </div>
+      </section>
+    );
+  }
+
+  if (error && apiProducts.length === 0) {
+    return (
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Product Management</h1>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 gap-2">
+          <p className="text-destructive">Error: {error}</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="space-y-6">
@@ -70,7 +104,7 @@ function ProductsContent() {
         <>
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Product Management</h1>
-            <CreateProductDialog />
+            <CreateProductDialog onCreate={handleCreate} />
           </div>
 
           <div className="flex gap-2 flex-wrap">
@@ -87,8 +121,8 @@ function ProductsContent() {
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -107,12 +141,11 @@ function ProductsContent() {
           </div>
 
           <div className="text-sm text-muted-foreground">
-            Showing {paginatedProducts.length} of {filteredProducts.length}{" "}
-            products
+            Showing {apiProducts.length} of {total} products
           </div>
 
           <ProductsTable
-            products={paginatedProducts}
+            products={apiProducts}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />
@@ -124,7 +157,7 @@ function ProductsContent() {
           )}
         </>
       ) : (
-        <CategoryManagement categories={categories} />
+        <CategoryManagement categories={categories.map((c) => c.name)} />
       )}
     </section>
   );
@@ -132,7 +165,13 @@ function ProductsContent() {
 
 export default function Products() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-12">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-12">
+          <Spinner /> Loading...
+        </div>
+      }
+    >
       <ProductsContent />
     </Suspense>
   );

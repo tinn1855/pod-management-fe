@@ -24,7 +24,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Order, OrderStatus } from "@/type/order";
-import { getStatusLabel, getPlatformLabel } from "@/data/order";
+import { getStatusLabel, getPlatformLabel } from "@/utils/order-helpers";
 import {
   PLATFORM_BADGE_OUTLINE_VARIANTS,
   ORDER_STATUS_BADGE_OUTLINE_VARIANTS,
