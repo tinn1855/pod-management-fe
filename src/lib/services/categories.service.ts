@@ -52,24 +52,28 @@ export const categoriesService = {
     }
 
     const data = await response.json();
-    
+    const totalCount =
+      response.headers.get("X-Total-Count") ||
+      response.headers.get("x-total-count");
+
     // Handle different response formats
     let categories: Category[] = [];
     let total = 0;
 
-    if (Array.isArray(data)) {
-      total = data.length;
-      // If the API returns all items as an array, we manually paginate on the client
-      if (params?.page && params?.limit) {
-        const start = (params.page - 1) * params.limit;
-        const end = start + params.limit;
-        categories = data.slice(start, end);
-      } else {
-        categories = data;
-      }
+    if (data.meta && data.data && Array.isArray(data.data)) {
+      categories = data.data;
+      total =
+        data.meta.total ||
+        (totalCount ? parseInt(totalCount) : categories.length);
+    } else if (Array.isArray(data)) {
+      categories = data;
+      total = totalCount ? parseInt(totalCount) : data.length;
     } else if (data.data && Array.isArray(data.data)) {
       categories = data.data;
-      total = data.total || data.count || categories.length;
+      total =
+        data.total ||
+        data.count ||
+        (totalCount ? parseInt(totalCount) : categories.length);
     }
 
     return { data: categories, total };
@@ -92,7 +96,10 @@ export const categoriesService = {
     return await response.json();
   },
 
-  update: async (id: string, category: Partial<Category>): Promise<Category> => {
+  update: async (
+    id: string,
+    category: Partial<Category>
+  ): Promise<Category> => {
     const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
       method: "PATCH",
       headers: getAuthHeaders(),

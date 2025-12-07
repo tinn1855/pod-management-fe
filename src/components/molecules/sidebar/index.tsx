@@ -83,12 +83,12 @@ const productsSubItems = [
   {
     title: "Product Management",
     url: "/products",
-    query: "?view=products",
+    query: "",
   },
   {
     title: "Category Management",
-    url: "/products",
-    query: "?view=categories",
+    url: "/categories",
+    query: "",
   },
 ];
 
@@ -166,19 +166,13 @@ function AppSidebarContent() {
   };
 
   const isProductPageActive = () => {
-    return pathname.startsWith("/products");
+    return (
+      pathname.startsWith("/products") || pathname.startsWith("/categories")
+    );
   };
 
   const isSubItemActive = (item: (typeof productsSubItems)[0]) => {
-    if (!isProductPageActive()) return false;
-    const view = searchParams.get("view");
-    if (item.query.includes("view=products")) {
-      return !view || view === "products";
-    }
-    if (item.query.includes("view=categories")) {
-      return view === "categories";
-    }
-    return false;
+    return pathname.startsWith(item.url);
   };
 
   const renderMenuItems = (
