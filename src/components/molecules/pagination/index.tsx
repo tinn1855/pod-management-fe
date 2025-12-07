@@ -9,11 +9,11 @@ import {
   PaginationNext,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { useCallback, useMemo } from "react";
 
 interface AppPaginationProps {
   totalPages: number;
-  // Optional: for controlled mode (state-based)
   currentPage?: number;
   onPageChange?: (page: number) => void;
 }
@@ -25,6 +25,7 @@ export function AppPagination({
 }: AppPaginationProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Use controlled page if provided, otherwise use URL params
   const isControlled =
@@ -33,28 +34,33 @@ export function AppPagination({
     ? controlledPage
     : Number(searchParams.get("page") ?? 1);
 
-  const createQuery = (value: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value === 1) {
-      params.delete("page");
-    } else {
-      params.set("page", value.toString());
-    }
-    const query = params.toString();
-    return query ? `${pathname}?${query}` : pathname;
-  };
+  const createQuery = useCallback(
+    (value: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === 1) {
+        params.delete("page");
+      } else {
+        params.set("page", value.toString());
+      }
+      const query = params.toString();
+      return query ? `${pathname}?${query}` : pathname;
+    },
+    [searchParams, pathname]
+  );
 
-  const handlePageClick = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    newPage: number
-  ) => {
-    if (isControlled) {
+  const handlePageClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>, newPage: number) => {
       e.preventDefault();
-      onPageChange(newPage);
-    }
-  };
+      if (isControlled) {
+        onPageChange(newPage);
+      } else {
+        router.push(createQuery(newPage), { scroll: false });
+      }
+    },
+    [isControlled, onPageChange, router, createQuery]
+  );
 
-  const generatePages = () => {
+  const pages = useMemo(() => {
     const pages: (number | "...")[] = [];
 
     if (totalPages <= 7) {
@@ -75,9 +81,7 @@ export function AppPagination({
     pages.push(totalPages - 1, totalPages);
 
     return pages;
-  };
-
-  const pages = generatePages();
+  }, [page, totalPages]);
 
   if (totalPages <= 1) return null;
 
@@ -87,7 +91,7 @@ export function AppPagination({
         {/* Prev */}
         <PaginationItem>
           <PaginationPrevious
-            href={isControlled ? "#" : createQuery(Math.max(page - 1, 1))}
+            href={createQuery(Math.max(page - 1, 1))}
             onClick={(e) => handlePageClick(e, Math.max(page - 1, 1))}
             aria-disabled={page === 1}
             className={page === 1 ? "pointer-events-none opacity-50" : ""}
@@ -103,7 +107,7 @@ export function AppPagination({
           ) : (
             <PaginationItem key={i}>
               <PaginationLink
-                href={isControlled ? "#" : createQuery(Number(p))}
+                href={createQuery(Number(p))}
                 onClick={(e) => handlePageClick(e, Number(p))}
                 isActive={p === page}
               >
@@ -116,9 +120,7 @@ export function AppPagination({
         {/* Next */}
         <PaginationItem>
           <PaginationNext
-            href={
-              isControlled ? "#" : createQuery(Math.min(page + 1, totalPages))
-            }
+            href={createQuery(Math.min(page + 1, totalPages))}
             onClick={(e) => handlePageClick(e, Math.min(page + 1, totalPages))}
             aria-disabled={page === totalPages}
             className={

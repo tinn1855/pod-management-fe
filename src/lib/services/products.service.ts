@@ -66,7 +66,11 @@ const normalizeProduct = (product: any): Product => {
   let categoryId = 1; // Default
   if (typeof product.categoryId === "number") {
     categoryId = product.categoryId;
-  } else if (product.category && typeof product.category === "object" && product.category.id) {
+  } else if (
+    product.category &&
+    typeof product.category === "object" &&
+    product.category.id
+  ) {
     categoryId = Number(product.category.id);
   } else if (typeof product.category === "number") {
     categoryId = product.category;
@@ -80,31 +84,39 @@ const normalizeProduct = (product: any): Product => {
   // Normalize images
   let images: string[] = [];
   if (Array.isArray(product.images)) {
-    images = product.images.map((img: any) => {
-      if (typeof img === "string") return img;
-      return img.url || "";
-    }).filter(Boolean);
+    images = product.images
+      .map((img: any) => {
+        if (typeof img === "string") return img;
+        return img.url || "";
+      })
+      .filter(Boolean);
   } else if (product.thumbnail) {
     images = [product.thumbnail];
   }
 
   // Normalize variations
   const variations = {
-    sizes: Array.isArray(product.variations?.sizes) 
-      ? product.variations.sizes 
-      : Array.isArray(product.sizes) ? product.sizes : [],
-    colors: Array.isArray(product.variations?.colors) 
-      ? product.variations.colors 
-      : Array.isArray(product.colors) ? product.colors : [],
+    sizes: Array.isArray(product.variations?.sizes)
+      ? product.variations.sizes
+      : Array.isArray(product.sizes)
+      ? product.sizes
+      : [],
+    colors: Array.isArray(product.variations?.colors)
+      ? product.variations.colors
+      : Array.isArray(product.colors)
+      ? product.colors
+      : [],
   };
 
   // Normalize mockups
   let mockups: string[] = [];
   if (Array.isArray(product.mockups)) {
-    mockups = product.mockups.map((m: any) => {
-      if (typeof m === "string") return m;
-      return m.url || "";
-    }).filter(Boolean);
+    mockups = product.mockups
+      .map((m: any) => {
+        if (typeof m === "string") return m;
+        return m.url || "";
+      })
+      .filter(Boolean);
   }
 
   return {
@@ -116,7 +128,10 @@ const normalizeProduct = (product: any): Product => {
     images,
     variations,
     mockups,
-    isActive: product.isActive !== undefined ? product.isActive : (product.status === "in stock"),
+    isActive:
+      product.isActive !== undefined
+        ? product.isActive
+        : product.status === "in stock",
     updatedAt,
   };
 };

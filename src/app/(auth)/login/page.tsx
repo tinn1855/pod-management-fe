@@ -21,6 +21,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -65,7 +66,7 @@ export default function LoginPage() {
             Enter your credentials to continue
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-8 pb-8">
+        <CardContent>
           <Form {...form}>
             <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
               <FormField
@@ -110,6 +111,13 @@ export default function LoginPage() {
             </form>
           </Form>
         </CardContent>
+        <CardFooter>
+          <div className="flex items-center justify-center">
+            <p>admin</p>
+            <span>tinn1855@gmail.com</span>
+            <span>123123</span>
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );

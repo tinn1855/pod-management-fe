@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ProductImage } from "@/components/atoms/product-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -73,19 +74,13 @@ export function ProductsTable({
               <TableCell>{index + 1}</TableCell>
               <TableCell>
                 <div className="aspect-square w-14 rounded-md overflow-hidden border bg-muted relative">
-                  {product.images?.[0] ? (
-                    <Image
-                      src={product.images[0]}
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                      sizes="48px"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
-                      No img
-                    </div>
-                  )}
+                  <ProductImage
+                    src={product.images?.[0]}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    sizes="48px"
+                  />
                 </div>
               </TableCell>
 

@@ -83,12 +83,12 @@ const productsSubItems = [
   {
     title: "Product Management",
     url: "/products",
-    query: "?view=products",
+    query: "",
   },
   {
     title: "Category Management",
-    url: "/products",
-    query: "?view=categories",
+    url: "/categories",
+    query: "",
   },
 ];
 
@@ -166,19 +166,13 @@ function AppSidebarContent() {
   };
 
   const isProductPageActive = () => {
-    return pathname.startsWith("/products");
+    return (
+      pathname.startsWith("/products") || pathname.startsWith("/categories")
+    );
   };
 
-  const isSubItemActive = (item: typeof productsSubItems[0]) => {
-    if (!isProductPageActive()) return false;
-    const view = searchParams.get("view");
-    if (item.query.includes("view=products")) {
-      return !view || view === "products";
-    }
-    if (item.query.includes("view=categories")) {
-      return view === "categories";
-    }
-    return false;
+  const isSubItemActive = (item: (typeof productsSubItems)[0]) => {
+    return pathname.startsWith(item.url);
   };
 
   const renderMenuItems = (
@@ -241,7 +235,7 @@ function AppSidebarContent() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              
+
               {/* Products - Expandable */}
               <SidebarMenuItem>
                 <SidebarMenuButton
@@ -313,10 +307,7 @@ function AppSidebarContent() {
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                className="w-[--radix-popper-anchor-width]"
-              >
+              <DropdownMenuContent side="top">
                 <DropdownMenuItem>
                   <span>Account</span>
                 </DropdownMenuItem>
@@ -325,7 +316,7 @@ function AppSidebarContent() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
-                  <LogOut className="mr-2 size-4" />
+                  <LogOut />
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

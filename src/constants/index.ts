@@ -47,6 +47,12 @@ export const formatNumber = (value: number): string => {
 };
 
 // ============================================
+// IMAGES
+// ============================================
+
+export const DEFAULT_PRODUCT_IMAGE = "/placeholder.svg";
+
+// ============================================
 // STATUS COLORS (Tailwind classes)
 // ============================================
 
