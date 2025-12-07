@@ -10,17 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LayoutGrid, List, Search } from "lucide-react";
+import { LayoutGrid, List, Search, Loader2 } from "lucide-react";
 import { Idea, IdeaStatus } from "@/type/idea";
 import { IdeaKanbanBoard } from "@/components/molecules/idea-kanban-board";
 import { IdeaListView } from "@/components/molecules/idea-list-view";
 import { CreateIdeaDialog } from "@/components/molecules/idea-create-dialog";
 import { IdeaDetailDialog } from "@/components/molecules/idea-detail-dialog";
 import { useUsers } from "@/hooks/use-users";
-import { Loader2 } from "lucide-react";
-
-// TODO: Replace with API call - useIdeas hook
-// import { useIdeas } from "@/hooks/use-ideas";
+import { useIdeas } from "@/hooks/use-ideas";
+import { useIdeaStatusUpdate } from "@/hooks/use-idea-status-update";
 import { toast } from "sonner";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
@@ -34,19 +32,26 @@ function IdeasPageContent() {
   // Get view mode from URL params
   const viewMode = (searchParams.get("view") as ViewMode) || "kanban";
 
-  // TODO: Replace with API call
-  // const { ideas, loading, error, refetch } = useIdeas();
-  const [ideas, setIdeas] = useState<Idea[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  
-  // Fetch users for assignee/createdBy
-  const { users } = useUsers({ page: 1, limit: 1000 });
-
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+
+  // Use hook to fetch ideas
+  const { ideas, loading, error, createIdea, updateIdea, deleteIdea } =
+    useIdeas({
+      search: searchQuery,
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      priority: priorityFilter !== "all" ? priorityFilter : undefined,
+      limit: 100, // Fetch all for Kanban
+    });
+
+  // Fetch users for assignee/createdBy
+  const { users } = useUsers({ page: 1, limit: 1000 });
+
+  // Optimistic status update hook
+  const { updateStatus } = useIdeaStatusUpdate();
 
   // Handle view mode change
   const setViewMode = (mode: ViewMode) => {
@@ -62,55 +67,34 @@ function IdeasPageContent() {
     router.push(query ? `${pathname}?${query}` : pathname);
   };
 
-  // Filter ideas
-  const filteredIdeas = ideas.filter((idea) => {
-    const matchesSearch =
-      idea.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      idea.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      idea.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    const matchesStatus =
-      statusFilter === "all" || idea.status === statusFilter;
-    const matchesPriority =
-      priorityFilter === "all" || idea.priority === priorityFilter;
-    return matchesSearch && matchesStatus && matchesPriority;
-  });
+  // Filter is handled by API now, but we might want to filter client-side for immediate feedback if not refetching
+  // However, useIdeas hooks refetches on params change, so we rely on API data.
+  // The 'ideas' from hook are already filtered by the API based on the props passed to useIdeas.
 
-  const handleCreateIdea = (
+  const handleCreateIdea = async (
     newIdea: Omit<Idea, "id" | "createdAt" | "updatedAt" | "comments">
   ) => {
-    // TODO: Replace with API call
-    // await createIdea(newIdea);
-    const idea: Idea = {
-      ...newIdea,
-      id: `idea-${Date.now()}`,
-      comments: [],
-      createdAt: new Date().toISOString().split("T")[0],
-      updatedAt: new Date().toISOString().split("T")[0],
-    };
-    setIdeas((prev) => [idea, ...prev]);
-    toast.success("Idea created successfully");
+    try {
+      await createIdea(newIdea);
+      setDetailDialogOpen(false);
+    } catch {
+      // Error handled in hook
+    }
   };
 
   const handleUpdateIdeaStatus = (ideaId: string, newStatus: IdeaStatus) => {
-    setIdeas((prev) =>
-      prev.map((idea) =>
-        idea.id === ideaId
-          ? {
-              ...idea,
-              status: newStatus,
-              updatedAt: new Date().toISOString().split("T")[0],
-            }
-          : idea
-      )
-    );
-    toast.success("Idea status updated");
+    updateStatus(ideaId, newStatus);
   };
 
-  const handleDeleteIdea = (ideaId: string) => {
-    setIdeas((prev) => prev.filter((idea) => idea.id !== ideaId));
-    toast.success("Idea deleted successfully");
+  const handleDeleteIdea = async (ideaId: string) => {
+    try {
+      await deleteIdea(ideaId);
+      if (selectedIdea?.id === ideaId) {
+        setDetailDialogOpen(false);
+      }
+    } catch {
+      // Error handled in hook
+    }
   };
 
   const handleOpenDetail = (idea: Idea) => {
@@ -118,15 +102,19 @@ function IdeasPageContent() {
     setDetailDialogOpen(true);
   };
 
-  const handleUpdateIdea = (updatedIdea: Idea) => {
-    setIdeas((prev) =>
-      prev.map((idea) => (idea.id === updatedIdea.id ? updatedIdea : idea))
-    );
-    setSelectedIdea(updatedIdea);
+  const handleUpdateIdea = async (updatedIdea: Idea) => {
+    try {
+      await updateIdea(updatedIdea.id, updatedIdea);
+      setSelectedIdea(updatedIdea);
+    } catch {
+      // Error handled in hook
+    }
   };
 
   // Get designers for assignment
-  const designers = users.filter((user) => user.role.name === "DESIGNER" || user.role.name === "Designer");
+  const designers = users.filter(
+    (user) => user.role.name === "DESIGNER" || user.role.name === "Designer"
+  );
 
   return (
     <div className="space-y-6">
@@ -232,23 +220,35 @@ function IdeasPageContent() {
         ))}
       </div>
 
-      {/* Content */}
-      {viewMode === "kanban" ? (
-        <div className="h-[calc(100vh-380px)] min-h-[400px]">
-          <IdeaKanbanBoard
-            ideas={filteredIdeas}
-            onUpdateStatus={handleUpdateIdeaStatus}
-            onDelete={handleDeleteIdea}
-            onOpenDetail={handleOpenDetail}
-          />
+      {loading && ideas.length === 0 ? (
+        <div className="flex items-center justify-center py-12 gap-2">
+          <Loader2 className="animate-spin" /> Loading ideas...
+        </div>
+      ) : error && ideas.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 gap-2">
+          <p className="text-destructive">Error: {String(error)}</p>
         </div>
       ) : (
-        <IdeaListView
-          ideas={filteredIdeas}
-          onUpdateStatus={handleUpdateIdeaStatus}
-          onDelete={handleDeleteIdea}
-          onOpenDetail={handleOpenDetail}
-        />
+        <>
+          {/* Content */}
+          {viewMode === "kanban" ? (
+            <div className="h-[calc(100vh-380px)] min-h-[400px]">
+              <IdeaKanbanBoard
+                ideas={ideas}
+                onUpdateStatus={handleUpdateIdeaStatus}
+                onDelete={handleDeleteIdea}
+                onOpenDetail={handleOpenDetail}
+              />
+            </div>
+          ) : (
+            <IdeaListView
+              ideas={ideas}
+              onUpdateStatus={handleUpdateIdeaStatus}
+              onDelete={handleDeleteIdea}
+              onOpenDetail={handleOpenDetail}
+            />
+          )}
+        </>
       )}
 
       {/* Detail Dialog */}
@@ -267,7 +267,11 @@ function IdeasPageContent() {
 
 export default function IdeasPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-12">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-12">Loading...</div>
+      }
+    >
       <IdeasPageContent />
     </Suspense>
   );

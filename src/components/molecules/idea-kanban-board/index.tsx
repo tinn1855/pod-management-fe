@@ -286,7 +286,12 @@ export function IdeaKanbanBoard({
   onDelete,
   onOpenDetail,
 }: IdeaKanbanBoardProps) {
-  const columns = getIdeasByStatus(ideas);
+  const groupedIdeas = getIdeasByStatus(ideas);
+  const columns = STATUS_ORDER.map((status) => ({
+    id: status,
+    title: getStatusLabel(status),
+    ideas: groupedIdeas[status] || [],
+  }));
   const [draggedIdea, setDraggedIdea] = useState<Idea | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<IdeaStatus | null>(null);
 

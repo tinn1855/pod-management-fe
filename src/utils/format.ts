@@ -1,4 +1,4 @@
-import { isPast, isToday, isTomorrow } from "date-fns";
+import { isPast, isToday, isTomorrow, isValid } from "date-fns";
 import {
   Calendar,
   Clock,
@@ -12,13 +12,15 @@ import { Priority, PRIORITY_ORDER } from "@/type/idea";
  * Get initials from a name string
  * @example getInitials("John Doe") => "JD"
  */
-export const getInitials = (name: string): string =>
-  name
+export const getInitials = (name: string): string => {
+  if (!name) return "";
+  return name
     .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
+};
 
 /**
  * Deadline status result type
@@ -36,6 +38,14 @@ export interface DeadlineStatus {
  */
 export const getDeadlineStatus = (deadline: string): DeadlineStatus => {
   const deadlineDate = new Date(deadline);
+
+  if (!isValid(deadlineDate)) {
+    return {
+      icon: Calendar,
+      className: "bg-muted text-muted-foreground",
+    };
+  }
+
   const isOverdue = isPast(deadlineDate) && !isToday(deadlineDate);
   const isDueToday = isToday(deadlineDate);
 
@@ -72,6 +82,11 @@ export const getDetailedDeadlineStatus = (
   deadline: string
 ): DeadlineStatus | null => {
   const deadlineDate = new Date(deadline);
+
+  if (!isValid(deadlineDate)) {
+    return null;
+  }
+
   const isOverdue = isPast(deadlineDate) && !isToday(deadlineDate);
   const isDueToday = isToday(deadlineDate);
   const isDueTomorrow = isTomorrow(deadlineDate);

@@ -34,10 +34,11 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { isPast, isToday, format } from "date-fns";
+import { isPast, isToday, format, isValid } from "date-fns";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { AppPagination } from "@/components/molecules/pagination";
 import Link from "next/link";
+import { getInitials } from "@/utils/format";
 
 interface IdeaListViewProps {
   ideas: Idea[];
@@ -67,15 +68,6 @@ export function IdeaListView({
   const pathname = usePathname();
 
   const currentPage = Number(searchParams.get("page") ?? 1);
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   // Pagination calculations
   const totalItems = ideas.length;
@@ -174,7 +166,7 @@ export function IdeaListView({
                   )}
                 </TableCell>
                 <TableCell>
-                  {idea.deadline ? (
+                  {idea.deadline && isValid(new Date(idea.deadline)) ? (
                     <div
                       className={cn(
                         "flex items-center gap-1 text-xs",
@@ -227,7 +219,9 @@ export function IdeaListView({
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground text-xs">
-                  {format(new Date(idea.updatedAt), "MMM dd")}
+                  {isValid(new Date(idea.updatedAt))
+                    ? format(new Date(idea.updatedAt), "MMM dd")
+                    : "N/A"}
                 </TableCell>
                 <TableCell
                   className="text-right"

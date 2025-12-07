@@ -57,7 +57,7 @@ import {
   Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, isValid } from "date-fns";
 import { vi } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
@@ -155,6 +155,9 @@ export function IdeaDetailDialog({
     });
   };
 
+  // NOTE: The API currently does not support saving deadline or references.
+  // These functions update the local state for immediate feedback, but the backend may strip these fields.
+  // If the backend is updated to support them, no changes are needed here.
   const handleSetDeadline = (date: Date | undefined) => {
     onUpdate({
       ...idea,
@@ -424,13 +427,15 @@ export function IdeaDetailDialog({
                               {comment.author.name}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(
-                                new Date(comment.createdAt),
-                                {
-                                  addSuffix: true,
-                                  locale: vi,
-                                }
-                              )}
+                              {isValid(new Date(comment.createdAt))
+                                ? formatDistanceToNow(
+                                    new Date(comment.createdAt),
+                                    {
+                                      addSuffix: true,
+                                      locale: vi,
+                                    }
+                                  )
+                                : "Just now"}
                             </span>
                             <Button
                               variant="ghost"
@@ -597,7 +602,11 @@ export function IdeaDetailDialog({
               <div className="space-y-1.5">
                 <Label>Deadline</Label>
                 <DatePicker
-                  date={idea.deadline ? new Date(idea.deadline) : undefined}
+                  date={
+                    idea.deadline && isValid(new Date(idea.deadline))
+                      ? new Date(idea.deadline)
+                      : undefined
+                  }
                   onDateChange={handleSetDeadline}
                   placeholder="Set deadline"
                   className="w-full"
@@ -703,13 +712,17 @@ export function IdeaDetailDialog({
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Created</span>
                   <span>
-                    {format(new Date(idea.createdAt), DATE_FORMAT.LONG)}
+                    {isValid(new Date(idea.createdAt))
+                      ? format(new Date(idea.createdAt), DATE_FORMAT.LONG)
+                      : "N/A"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Updated</span>
                   <span>
-                    {format(new Date(idea.updatedAt), DATE_FORMAT.LONG)}
+                    {isValid(new Date(idea.updatedAt))
+                      ? format(new Date(idea.updatedAt), DATE_FORMAT.LONG)
+                      : "N/A"}
                   </span>
                 </div>
               </div>
